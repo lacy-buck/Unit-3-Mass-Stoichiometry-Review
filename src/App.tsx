@@ -16,6 +16,7 @@ import {
   Question3View,
   Question4View,
   Question5View,
+  Question6View,
 } from './components/QuestionViews';
 import { HomeworkReflectionView } from './components/HomeworkReflectionView';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
@@ -27,15 +28,16 @@ const STORAGE_KEY = 'unit3-stoichiometry-review-v3';
 const REFLECTION_STORAGE_KEY = 'unit3-stoichiometry-reflection-v2';
 const ENGAGEMENT_STORAGE_KEY = 'unit3-stoichiometry-engagement-v1';
 
-const QUESTION_KEYS: SectionKey[] = ['q4', 'q1', 'q3', 'q2', 'q5'];
+const QUESTION_KEYS: SectionKey[] = ['q4', 'q6', 'q1', 'q3', 'q2', 'q5'];
 
 const STEP_LABELS = [
   '1. Particulate',
-  '2. Stoichiometry',
-  '3. Conservation',
-  '4. Mole Ratios',
-  '5. Limiting Reactant',
-  '6. Reflection',
+  '2. Stoich. Calculation',
+  '3. Stoichiometry',
+  '4. Conservation',
+  '5. Mole Ratios',
+  '6. Limiting Reactant',
+  '7. Reflection',
 ];
 
 function loadInitialProgress(): AllSetsProgress {
@@ -201,16 +203,17 @@ export default function App() {
 
   const submittedCount = useMemo(() => {
     return [
-      currentProgress.q1.submitted,
-      currentProgress.q2.submitted,
-      currentProgress.q3.submitted,
       currentProgress.q4.submitted,
+      currentProgress.q6.submitted,
+      currentProgress.q1.submitted,
+      currentProgress.q3.submitted,
+      currentProgress.q2.submitted,
       currentProgress.q5.submitted,
     ].filter(Boolean).length;
   }, [currentProgress]);
 
   const handleSelectStep = (idx: number) => {
-    if (idx === 5) {
+    if (idx === 6) {
       setSection('reflection');
     } else {
       setQuestionIndex(idx);
@@ -309,7 +312,7 @@ export default function App() {
               <span aria-hidden="true">·</span>
               <span>{currentSet.name}</span>
               <span aria-hidden="true">·</span>
-              <span className="tabular-nums">{submittedCount} of 5 sections submitted</span>
+              <span className="tabular-nums">{submittedCount} of 6 sections submitted</span>
             </div>
             <p className="text-sm text-slate-700">{currentSet.subtitle}</p>
           </div>
@@ -337,7 +340,7 @@ export default function App() {
         {/* Section Stepper */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {STEP_LABELS.map((label, idx) => {
-            const isReflectionStep = idx === 5;
+            const isReflectionStep = idx === 6;
             const isActive = isReflectionStep
               ? section === 'reflection'
               : section === 'exam' && questionIndex === idx;
@@ -345,6 +348,7 @@ export default function App() {
               ? reflection.submitted
               : [
                   currentProgress.q4.submitted,
+                  currentProgress.q6.submitted,
                   currentProgress.q1.submitted,
                   currentProgress.q3.submitted,
                   currentProgress.q2.submitted,
@@ -383,6 +387,16 @@ export default function App() {
               />
             )}
             {questionIndex === 1 && (
+              <Question6View
+                data={currentSet.q6}
+                state={currentProgress.q6}
+                onChange={(next) =>
+                  updateCurrentProgress((prev) => ({ ...prev, q6: next }))
+                }
+                onSubmitAttempt={() => recordSectionAttempt('q6')}
+              />
+            )}
+            {questionIndex === 2 && (
               <Question1View
                 data={currentSet.q1}
                 state={currentProgress.q1}
@@ -392,7 +406,7 @@ export default function App() {
                 onSubmitAttempt={() => recordSectionAttempt('q1')}
               />
             )}
-            {questionIndex === 2 && (
+            {questionIndex === 3 && (
               <Question3View
                 data={currentSet.q3}
                 state={currentProgress.q3}
@@ -402,7 +416,7 @@ export default function App() {
                 onSubmitAttempt={() => recordSectionAttempt('q3')}
               />
             )}
-            {questionIndex === 3 && (
+            {questionIndex === 4 && (
               <Question2View
                 data={currentSet.q2}
                 state={currentProgress.q2}
@@ -412,7 +426,7 @@ export default function App() {
                 onSubmitAttempt={() => recordSectionAttempt('q2')}
               />
             )}
-            {questionIndex === 4 && (
+            {questionIndex === 5 && (
               <Question5View
                 data={currentSet.q5}
                 state={currentProgress.q5}
@@ -435,10 +449,10 @@ export default function App() {
                 Previous Section
               </button>
 
-              {questionIndex < 4 ? (
+              {questionIndex < 5 ? (
                 <button
                   type="button"
-                  onClick={() => setQuestionIndex((i) => Math.min(4, i + 1))}
+                  onClick={() => setQuestionIndex((i) => Math.min(5, i + 1))}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer"
                 >
                   Next Section
@@ -468,7 +482,7 @@ export default function App() {
             state={reflection}
             onChange={setReflection}
             onBackToExam={() => {
-              setQuestionIndex(4);
+              setQuestionIndex(5);
               setSection('exam');
             }}
           />

@@ -13,6 +13,13 @@ export interface Q1UserState {
   submitted: boolean;
 }
 
+export interface Q6UserState {
+  coeffs: [string, string, string, string];
+  steps: { num: string; den: string }[];
+  finalMass: string;
+  submitted: boolean;
+}
+
 export interface Q2UserState {
   prediction: 'more' | 'less' | 'same' | '';
   moleRatioRelation: 'more_moles' | 'fewer_moles' | 'equal_moles' | '';
@@ -59,6 +66,7 @@ export interface SetUserProgress {
   q3: Q3UserState;
   q4: Q4UserState;
   q5: Q5UserState;
+  q6: Q6UserState;
 }
 
 export type AllSetsProgress = Record<SetId, SetUserProgress>;
@@ -105,10 +113,16 @@ export function createEmptySetProgress(): SetUserProgress {
       excessMolesRemaining: '',
       submitted: false,
     },
+    q6: {
+      coeffs: ['', '', '', ''],
+      steps: [],
+      finalMass: '',
+      submitted: false,
+    },
   };
 }
 
-export type SectionKey = 'q1' | 'q2' | 'q3' | 'q4' | 'q5';
+export type SectionKey = 'q1' | 'q2' | 'q3' | 'q4' | 'q5' | 'q6';
 
 export interface EngagementLog {
   startedAtIso: string;
@@ -135,6 +149,7 @@ export function createEmptyEngagementLog(): EngagementLog {
       q3: 0,
       q4: 0,
       q5: 0,
+      q6: 0,
       reflection: 0,
     },
     attempts: {
@@ -143,6 +158,7 @@ export function createEmptyEngagementLog(): EngagementLog {
       q3: 0,
       q4: 0,
       q5: 0,
+      q6: 0,
     },
   };
 }

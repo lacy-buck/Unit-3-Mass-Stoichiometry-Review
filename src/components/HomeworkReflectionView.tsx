@@ -75,7 +75,7 @@ function downloadReflectionPdf(
   y += 16;
 
   doc.text(
-    `Practice Set: Set ${activeSetId}   |   Sections Checked: ${performance.submittedCount} / 5   |   Total Active Time: ${formatDuration(
+    `Practice Set: Set ${activeSetId}   |   Sections Checked: ${performance.submittedCount} / ${performance.sections.length}   |   Total Active Time: ${formatDuration(
       performance.totalTimeSec
     )}   |   Overall Accuracy: ${
       performance.overallPercent !== null
@@ -144,7 +144,7 @@ function downloadReflectionPdf(
   // Reflection time row
   ensureSpace(22);
   doc.setTextColor(71, 85, 105);
-  doc.text('6. Reflection', colX.section, y);
+  doc.text('7. Reflection', colX.section, y);
   doc.text('Active', colX.status, y);
   doc.text('—', colX.checks, y);
   doc.text(formatDuration(performance.reflectionTimeSec), colX.time, y);
@@ -249,7 +249,7 @@ export const HomeworkReflectionView: React.FC<HomeworkReflectionViewProps> = ({
           <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
             <div className="text-xs text-slate-500">Sections Checked</div>
             <div className="text-lg font-semibold font-mono tabular-nums text-slate-900 mt-0.5">
-              {performance.submittedCount} / 5
+              {performance.submittedCount} / {performance.sections.length}
             </div>
           </div>
 
@@ -304,7 +304,7 @@ export const HomeworkReflectionView: React.FC<HomeworkReflectionViewProps> = ({
                 );
               })}
               <tr className="text-slate-600 bg-slate-50/50">
-                <td className="py-2.5 px-3 font-medium">6. Reflection</td>
+                <td className="py-2.5 px-3 font-medium">7. Reflection</td>
                 <td className="py-2.5 px-3">In progress</td>
                 <td className="py-2.5 px-3 text-right font-mono tabular-nums">—</td>
                 <td className="py-2.5 px-3 text-right font-mono tabular-nums">

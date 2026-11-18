@@ -7,6 +7,7 @@ import {
   Question3Data,
   Question4Data,
   Question5Data,
+  Question6Data,
 } from '../data/reviewSets';
 import {
   Q1UserState,
@@ -14,6 +15,7 @@ import {
   Q3UserState,
   Q4UserState,
   Q5UserState,
+  Q6UserState,
 } from '../types/progress';
 import { ParticleBox } from './ParticulateDiagram';
 import {
@@ -508,10 +510,10 @@ export const Question1View: React.FC<{
             }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
-            Submit Section 2
+            Submit Section 3
           </button>
           {state.submitted && (
-            <span className="text-xs text-slate-600">Section 2 checked</span>
+            <span className="text-xs text-slate-600">Section 3 checked</span>
           )}
         </div>
       </div>
@@ -714,10 +716,10 @@ export const Question2View: React.FC<{
             }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
-            Submit Section 4
+            Submit Section 5
           </button>
           {state.submitted && (
-            <span className="text-xs text-slate-600">Section 4 checked</span>
+            <span className="text-xs text-slate-600">Section 5 checked</span>
           )}
         </div>
       </div>
@@ -779,7 +781,7 @@ export const Question3View: React.FC<{
           }}
           className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
         >
-          Submit Section 3
+          Submit Section 4
         </button>
         {state.submitted && (
           <span className="text-sm font-medium font-mono tabular-nums text-slate-700">
@@ -1295,13 +1297,330 @@ export const Question5View: React.FC<{
           }}
           className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
         >
-          Submit Section 5
+          Submit Section 6
         </button>
         {state.submitted && (
           <span className="text-xs text-slate-600">
-            Section 5 checked · Proceed to Reflection
+            Section 6 checked · Proceed to Reflection
           </span>
         )}
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+ * SECTION 2 (New): Pure Stoichiometry Calculation (Balance + Track + Mass)
+ * ========================================================================== */
+export const Question6View: React.FC<{
+  data: Question6Data;
+  state: Q6UserState;
+  onChange: (next: Q6UserState) => void;
+  onSubmitAttempt?: () => void;
+}> = ({ data, state, onChange, onSubmitAttempt }) => {
+  const [showHint, setShowHint] = useState(false);
+
+  const steps = state.steps || [];
+
+  const addStep = () => {
+    if (steps.length >= 4) return;
+    onChange({
+      ...state,
+      steps: [...steps, { num: '', den: '' }],
+    });
+  };
+
+  const removeStep = (index: number) => {
+    onChange({
+      ...state,
+      steps: steps.filter((_, idx) => idx !== index),
+    });
+  };
+
+  const updateStep = (index: number, field: 'num' | 'den', value: string) => {
+    const next = steps.map((step, idx) =>
+      idx === index ? { ...step, [field]: value } : step
+    );
+    onChange({ ...state, steps: next });
+  };
+
+  const coeffsCorrect = data.equationParts.correctCoeffs.every(
+    (c, idx) => parseInt(state.coeffs[idx] || '0', 10) === c
+  );
+
+  const stepCountCorrect = steps.length === data.trackOptions.correctSteps.length;
+  const trackCorrect =
+    stepCountCorrect &&
+    data.trackOptions.correctSteps.every(
+      (expected, idx) => steps[idx]?.num === expected.num && steps[idx]?.den === expected.den
+    );
+
+  const massCorrect = approxEqual(state.finalMass, data.correctMass, data.tolerance);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="text-xs text-slate-500 font-medium">{data.skillFocus}</div>
+          <h2 className="text-xl font-semibold text-slate-900">{data.title}</h2>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowHint((h) => !h)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer whitespace-nowrap shrink-0"
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+          {showHint ? 'Hide Hint' : 'Strategy Hint'}
+        </button>
+      </div>
+
+      {showHint && (
+        <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sm text-sky-950 space-y-1">
+          <p className="font-medium">How to decide how many steps your railroad track needs:</p>
+          <p className="text-xs leading-relaxed text-sky-900">
+            1) Balance every element on both sides of the equation first. 2) Compare your starting
+            unit to your target unit: <strong>mol → mol</strong> needs 1 step (mole ratio),{' '}
+            <strong>mol → g</strong> needs 2 steps (mole ratio + product molar mass), and{' '}
+            <strong>g → g</strong> needs 3 steps (reactant molar mass + mole ratio + product molar
+            mass). 3) Ensure every denominator cancels the previous numerator diagonally.
+          </p>
+        </div>
+      )}
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <p className="text-sm sm:text-base text-slate-800 leading-relaxed">
+          <span className="font-semibold text-slate-900">Problem: </span>
+          {data.prompt}
+        </p>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-slate-600">
+            1. Balance the chemical equation (enter coefficients; use 1 if implicit):
+          </label>
+          <div className="flex flex-wrap items-center gap-2 chem-eq text-sm sm:text-base bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={state.coeffs[0]}
+              onChange={(e) => {
+                const next = [...state.coeffs] as [string, string, string, string];
+                next[0] = e.target.value;
+                onChange({ ...state, coeffs: next });
+              }}
+              aria-label={`Coefficient for ${data.equationParts.reactant1}`}
+              className="w-14 px-2 py-1 text-center font-mono bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-sky-600 focus:outline-none"
+            />
+            <span>{data.equationParts.reactant1}</span>
+            <span>+</span>
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={state.coeffs[1]}
+              onChange={(e) => {
+                const next = [...state.coeffs] as [string, string, string, string];
+                next[1] = e.target.value;
+                onChange({ ...state, coeffs: next });
+              }}
+              aria-label={`Coefficient for ${data.equationParts.reactant2}`}
+              className="w-14 px-2 py-1 text-center font-mono bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-sky-600 focus:outline-none"
+            />
+            <span>{data.equationParts.reactant2}</span>
+            <span>→</span>
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={state.coeffs[2]}
+              onChange={(e) => {
+                const next = [...state.coeffs] as [string, string, string, string];
+                next[2] = e.target.value;
+                onChange({ ...state, coeffs: next });
+              }}
+              aria-label={`Coefficient for ${data.equationParts.product1}`}
+              className="w-14 px-2 py-1 text-center font-mono bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-sky-600 focus:outline-none"
+            />
+            <span>{data.equationParts.product1}</span>
+            <span>+</span>
+            <input
+              type="number"
+              min={1}
+              max={30}
+              value={state.coeffs[3]}
+              onChange={(e) => {
+                const next = [...state.coeffs] as [string, string, string, string];
+                next[3] = e.target.value;
+                onChange({ ...state, coeffs: next });
+              }}
+              aria-label={`Coefficient for ${data.equationParts.product2}`}
+              className="w-14 px-2 py-1 text-center font-mono bg-white border border-slate-300 rounded-md focus:ring-2 focus:ring-sky-600 focus:outline-none"
+            />
+            <span>{data.equationParts.product2}</span>
+          </div>
+          {state.submitted && (
+            <StatusFeedback
+              ok={coeffsCorrect}
+              okText="Equation coefficients are balanced."
+              errText="Recount atoms of every element on both sides of the equation."
+            />
+          )}
+        </div>
+
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-xs font-medium text-slate-600">
+              2. Build your dimensional analysis railroad track (decide how many conversion steps you
+              need):
+            </label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono tabular-nums text-slate-500">
+                {steps.length} {steps.length === 1 ? 'step' : 'steps'}
+              </span>
+              {steps.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => removeStep(steps.length - 1)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
+                >
+                  <Minus className="w-3 h-3" />
+                  Remove Step
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={steps.length >= 4}
+                onClick={addStep}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-sky-800 bg-sky-50 border border-sky-200 hover:bg-sky-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                Add Step
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto pb-1">
+            <div className="inline-flex items-stretch gap-2 min-w-full bg-slate-50 border border-slate-200 rounded-lg p-3">
+              <div className="flex flex-col justify-center px-3 py-2 bg-white border border-slate-200 rounded-lg min-w-[130px] text-center">
+                <span className="text-[11px] text-slate-400 mb-1">Given</span>
+                <span className="chem-eq text-xs sm:text-sm font-semibold text-slate-900">
+                  {data.trackOptions.givenDisplay}
+                </span>
+              </div>
+
+              {steps.map((step, idx) => (
+                <div
+                  key={`q6-step-${idx}`}
+                  className="flex flex-col gap-1.5 min-w-[175px] bg-white border border-slate-200 rounded-lg p-2"
+                >
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 px-0.5">
+                    <span>Step {idx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeStep(idx)}
+                      aria-label={`Remove step ${idx + 1}`}
+                      className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <select
+                    value={step.num}
+                    onChange={(e) => updateStep(idx, 'num', e.target.value)}
+                    aria-label={`Step ${idx + 1} numerator`}
+                    className="text-xs font-mono bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
+                  >
+                    <option value="">Select numerator...</option>
+                    {data.trackOptions.numOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="border-t border-slate-800" />
+                  <select
+                    value={step.den}
+                    onChange={(e) => updateStep(idx, 'den', e.target.value)}
+                    aria-label={`Step ${idx + 1} denominator`}
+                    className="text-xs font-mono bg-slate-50 border border-slate-200 rounded px-2 py-1.5"
+                  >
+                    <option value="">Select denominator...</option>
+                    {data.trackOptions.denOptions.map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+
+              {steps.length < 4 && (
+                <button
+                  type="button"
+                  onClick={addStep}
+                  className="flex flex-col items-center justify-center gap-1 px-4 py-3 min-w-[140px] border border-dashed border-slate-300 rounded-lg text-xs font-medium text-slate-600 hover:border-sky-500 hover:text-sky-700 hover:bg-white transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Conversion Step</span>
+                </button>
+              )}
+            </div>
+          </div>
+          {state.submitted && (
+            <StatusFeedback
+              ok={trackCorrect}
+              okText="Dimensional analysis steps & unit cancellation are correct!"
+              errText={
+                !stepCountCorrect
+                  ? `Check how many conversion steps are needed to convert from ${data.trackOptions.givenDisplay} to ${data.targetUnit}.`
+                  : 'You have the right number of steps—check unit cancellation and ensure molar mass is per 1 mole.'
+              }
+            />
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="q6-final-mass" className="block text-xs font-medium text-slate-600">
+            3. Final calculated answer ({data.targetUnit}):
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              id="q6-final-mass"
+              type="number"
+              step="0.01"
+              value={state.finalMass}
+              onChange={(e) => onChange({ ...state, finalMass: e.target.value })}
+              placeholder="0.00"
+              className="w-36 px-3 py-2 text-sm font-mono tabular-nums bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-600 focus:bg-white focus:outline-none"
+            />
+            <span className="chem-eq text-sm text-slate-700">{data.targetUnit}</span>
+          </div>
+          {state.submitted && (
+            <StatusFeedback
+              ok={massCorrect}
+              okText="Final calculated answer is accurate!"
+              errText="Recalculate using your balanced mole ratio and conversion steps."
+            />
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={() => {
+              onSubmitAttempt?.();
+              onChange({ ...state, submitted: true });
+            }}
+            className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+          >
+            Submit Section 2
+          </button>
+          {state.submitted && (
+            <span className="text-xs text-slate-600">Section 2 checked</span>
+          )}
+        </div>
       </div>
     </div>
   );

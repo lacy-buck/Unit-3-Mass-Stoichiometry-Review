@@ -148,6 +148,28 @@ export interface Question5Data {
   partAMcq: McqItem;
 }
 
+export interface Question6Data {
+  title: string;
+  skillFocus: string;
+  prompt: string;
+  equationParts: {
+    reactant1: string;
+    reactant2: string;
+    product1: string;
+    product2: string;
+    correctCoeffs: [number, number, number, number];
+  };
+  trackOptions: {
+    givenDisplay: string;
+    numOptions: string[];
+    denOptions: string[];
+    correctSteps: { num: string; den: string }[];
+  };
+  targetUnit: string;
+  correctMass: number;
+  tolerance: number;
+}
+
 export interface PracticeSet {
   id: SetId;
   name: string;
@@ -157,6 +179,7 @@ export interface PracticeSet {
   q3: Question3Data;
   q4: Question4Data;
   q5: Question5Data;
+  q6: Question6Data;
 }
 
 export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
@@ -165,7 +188,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     name: 'Practice Set A',
     subtitle: 'MgO particulate synthesis, Fe₂O₃ reduction stoichiometry, Fe/CuSO₄ lab-loss conservation, Mg/AgNO₃ prediction, Kroll Ti process',
     q1: {
-      title: '2. Stoichiometry',
+      title: '3. Stoichiometry',
       skillFocus: 'Equation Balancing · Dimensional Analysis · Molar Mass',
       prompt:
         'Iron(III) oxide (Fe₂O₃) reacts with solid carbon (C) in a blast furnace to produce pure iron (Fe) and carbon dioxide gas (CO₂). How many grams of carbon dioxide (CO₂) are produced from reacting 79.85 g of Fe₂O₃ with excess carbon?',
@@ -244,7 +267,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q2: {
-      title: '4. Mole Ratios & Molar Mass Prediction',
+      title: '5. Mole Ratios & Molar Mass Prediction',
       skillFocus: 'Qualitative Prediction · Mole Ratio · Molar Mass',
       context:
         'A student places a measured mass of solid magnesium ribbon into an aqueous solution of silver nitrate to produce solid silver in a single-replacement reaction:',
@@ -274,7 +297,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q3: {
-      title: '3. Conservation of Mass & Lab Errors',
+      title: '4. Conservation of Mass & Lab Errors',
       skillFocus: 'Law of Conservation of Mass · Experimental Error Analysis',
       context:
         'A student reacts 0.56 g of solid iron with excess aqueous copper(II) sulfate. Stoichiometry predicts a theoretical yield of 0.64 g of solid copper, but after filtering and drying, the student measures only 0.49 g of solid copper (less than expected):',
@@ -392,7 +415,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q5: {
-      title: '5. Quantitative Limiting Reactant & Excess',
+      title: '6. Quantitative Limiting Reactant & Excess',
       skillFocus: 'Limiting Reactant · Theoretical Yield · Excess Moles',
       context:
         'Titanium metal is extracted from titanium(IV) chloride in the Kroll process. At a smelter, 250.0 g of titanium(IV) chloride (TiCl₄, molar mass 189.67 g/mol) is heated with 75.0 g of magnesium (Mg, molar mass 24.31 g/mol), producing solid titanium and molten magnesium chloride:',
@@ -424,6 +447,47 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         feedbackIncorrect: 'Never compare raw gram masses or coefficients alone—compare moles required vs moles available.',
       },
     },
+
+    q6: {
+      title: '2. Stoichiometry Calculation',
+      skillFocus: 'Equation Balancing · Dimensional Analysis · Mass-to-Mass (g → g)',
+      prompt:
+        'Phosphoric acid (H₃PO₄) reacts with aqueous calcium hydroxide, Ca(OH)₂, to precipitate solid calcium phosphate, Ca₃(PO₄)₂, and liquid water (H₂O). Balance the chemical equation and calculate how many grams of solid Ca₃(PO₄)₂ are produced when 49.00 g of H₃PO₄ reacts completely with excess Ca(OH)₂.',
+      equationParts: {
+        reactant1: 'H₃PO₄',
+        reactant2: 'Ca(OH)₂',
+        product1: 'Ca₃(PO₄)₂',
+        product2: 'H₂O',
+        correctCoeffs: [2, 3, 1, 6],
+      },
+      trackOptions: {
+        givenDisplay: '49.00 g H₃PO₄',
+        numOptions: [
+          '1 mol H₃PO₄',
+          '98.00 g H₃PO₄',
+          '1 mol Ca₃(PO₄)₂',
+          '2 mol H₃PO₄',
+          '310.18 g Ca₃(PO₄)₂',
+          '620.36 g Ca₃(PO₄)₂',
+        ],
+        denOptions: [
+          '98.00 g H₃PO₄',
+          '1 mol H₃PO₄',
+          '2 mol H₃PO₄',
+          '1 mol Ca₃(PO₄)₂',
+          '2 mol Ca₃(PO₄)₂',
+          '310.18 g Ca₃(PO₄)₂',
+        ],
+        correctSteps: [
+          { num: '1 mol H₃PO₄', den: '98.00 g H₃PO₄' },
+          { num: '1 mol Ca₃(PO₄)₂', den: '2 mol H₃PO₄' },
+          { num: '310.18 g Ca₃(PO₄)₂', den: '1 mol Ca₃(PO₄)₂' },
+        ],
+      },
+      targetUnit: 'g Ca₃(PO₄)₂',
+      correctMass: 77.55,
+      tolerance: 0.3,
+    },
   },
 
   B: {
@@ -431,7 +495,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     name: 'Practice Set B',
     subtitle: 'Li₂O particulate synthesis, Al/HCl stoichiometry, Zn/AgNO₃ lab-loss conservation, Ca/AlCl₃ prediction, Methanol synthesis',
     q1: {
-      title: '2. Stoichiometry',
+      title: '3. Stoichiometry',
       skillFocus: 'Equation Balancing · Dimensional Analysis · Molar Mass',
       prompt:
         'Solid aluminum (Al) reacts with hydrochloric acid (HCl) to produce aqueous aluminum chloride (AlCl₃) and hydrogen gas (H₂). How many grams of hydrogen gas (H₂) are produced from reacting 53.96 g of Al with excess HCl?',
@@ -509,7 +573,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q2: {
-      title: '4. Mole Ratios & Molar Mass Prediction',
+      title: '5. Mole Ratios & Molar Mass Prediction',
       skillFocus: 'Qualitative Prediction · Mole Ratio · Molar Mass',
       context:
         'A student reacts a measured mass of solid calcium metal with an aqueous solution of aluminum chloride to produce solid aluminum:',
@@ -539,7 +603,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q3: {
-      title: '3. Conservation of Mass & Lab Errors',
+      title: '4. Conservation of Mass & Lab Errors',
       skillFocus: 'Law of Conservation of Mass · Experimental Error Analysis',
       context:
         'A student performs the reaction below using 0.65 g of solid zinc and excess aqueous silver nitrate. Stoichiometry predicts a theoretical yield of 2.15 g of solid silver, but after filtering and drying, the student measures only 1.78 g of solid silver (less than expected):',
@@ -657,7 +721,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q5: {
-      title: '5. Quantitative Limiting Reactant & Excess',
+      title: '6. Quantitative Limiting Reactant & Excess',
       skillFocus: 'Limiting Reactant · Theoretical Yield · Excess Moles',
       context:
         'Methanol is synthesized industrially by reacting carbon monoxide gas (CO, molar mass 28.01 g/mol) with hydrogen gas (H₂, molar mass 2.016 g/mol). In a reactor, 140.0 g of CO is combined with 16.0 g of H₂:',
@@ -689,6 +753,48 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         feedbackIncorrect: 'Compare the required 2:1 H₂-to-CO ratio against the actual moles present.',
       },
     },
+
+    q6: {
+      title: '2. Stoichiometry Calculation',
+      skillFocus: 'Equation Balancing · Dimensional Analysis · Mole-to-Mass (mol → g)',
+      prompt:
+        'In the Ostwald process, ammonia gas (NH₃) reacts with oxygen gas (O₂) to form nitrogen monoxide (NO) and water vapor (H₂O). Balance the chemical equation and calculate how many grams of water vapor (H₂O) are produced from reacting 4.00 mol of NH₃ with excess O₂.',
+      equationParts: {
+        reactant1: 'NH₃',
+        reactant2: 'O₂',
+        product1: 'NO',
+        product2: 'H₂O',
+        correctCoeffs: [4, 5, 4, 6],
+      },
+      trackOptions: {
+        givenDisplay: '4.00 mol NH₃',
+        numOptions: [
+          '6 mol H₂O',
+          '4 mol NH₃',
+          '18.02 g H₂O',
+          '108.12 g H₂O',
+          '1 mol H₂O',
+          '1 mol NH₃',
+          '17.03 g NH₃',
+        ],
+        denOptions: [
+          '4 mol NH₃',
+          '6 mol H₂O',
+          '1 mol H₂O',
+          '6 mol H₂O',
+          '18.02 g H₂O',
+          '17.03 g NH₃',
+          '1 mol NH₃',
+        ].filter((v, i, arr) => arr.indexOf(v) === i),
+        correctSteps: [
+          { num: '6 mol H₂O', den: '4 mol NH₃' },
+          { num: '18.02 g H₂O', den: '1 mol H₂O' },
+        ],
+      },
+      targetUnit: 'g H₂O',
+      correctMass: 108.12,
+      tolerance: 0.35,
+    },
   },
 
   C: {
@@ -696,7 +802,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     name: 'Practice Set C',
     subtitle: 'Mg₃N₂ particulate synthesis, Pentane combustion stoichiometry, Mg/CuCl₂ lab-loss conservation, Mg/FeCl₃ prediction, SiC furnace',
     q1: {
-      title: '2. Stoichiometry',
+      title: '3. Stoichiometry',
       skillFocus: 'Equation Balancing · Dimensional Analysis · Molar Mass',
       prompt:
         'Pentane (C₅H₁₂) reacts with oxygen gas in a combustion reaction to produce carbon dioxide and water. How many grams of carbon dioxide (CO₂) are produced from burning 36.08 g of C₅H₁₂ in excess oxygen?',
@@ -774,7 +880,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q2: {
-      title: '4. Mole Ratios & Molar Mass Prediction',
+      title: '5. Mole Ratios & Molar Mass Prediction',
       skillFocus: 'Qualitative Prediction · Mole Ratio · Molar Mass',
       context:
         'A student places solid magnesium ribbon into an aqueous iron(III) chloride solution to produce solid iron in a single-replacement reaction:',
@@ -804,7 +910,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q3: {
-      title: '3. Conservation of Mass & Lab Errors',
+      title: '4. Conservation of Mass & Lab Errors',
       skillFocus: 'Law of Conservation of Mass · Experimental Error Analysis',
       context:
         'A student performs the reaction below using 0.48 g of solid magnesium and excess aqueous copper(II) chloride. Stoichiometry predicts a theoretical yield of 1.25 g of solid copper, but after filtering and drying, the student recovers only 0.94 g of dry copper (less than expected):',
@@ -922,7 +1028,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q5: {
-      title: '5. Quantitative Limiting Reactant & Excess',
+      title: '6. Quantitative Limiting Reactant & Excess',
       skillFocus: 'Limiting Reactant · Theoretical Yield · Excess Moles',
       context:
         'Silicon carbide (carborundum) is manufactured in an electric furnace by heating silica sand (SiO₂, molar mass 60.08 g/mol) with solid carbon (C, molar mass 12.01 g/mol), producing silicon carbide and carbon monoxide gas:',
@@ -953,6 +1059,43 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         feedbackCorrect: 'Correct! 2.50 mol SiO₂ needs 7.49 mol C, which is less than the 8.33 mol C available.',
         feedbackIncorrect: 'Check required moles using the 3:1 C-to-SiO₂ ratio against available moles.',
       },
+    },
+
+    q6: {
+      title: '2. Stoichiometry Calculation',
+      skillFocus: 'Equation Balancing · Dimensional Analysis · Mole-to-Mole (mol → mol)',
+      prompt:
+        'Potassium superoxide (KO₂) is used in spacecraft life-support canisters to scrub carbon dioxide (CO₂) and regenerate oxygen gas (O₂) while forming solid potassium carbonate (K₂CO₃). Balance the chemical equation and calculate how many moles of O₂ are generated when 2.00 mol of KO₂ reacts completely with excess CO₂.',
+      equationParts: {
+        reactant1: 'KO₂',
+        reactant2: 'CO₂',
+        product1: 'K₂CO₃',
+        product2: 'O₂',
+        correctCoeffs: [4, 2, 2, 3],
+      },
+      trackOptions: {
+        givenDisplay: '2.00 mol KO₂',
+        numOptions: [
+          '3 mol O₂',
+          '4 mol KO₂',
+          '1 mol KO₂',
+          '71.10 g KO₂',
+          '32.00 g O₂',
+          '1 mol O₂',
+        ],
+        denOptions: [
+          '4 mol KO₂',
+          '3 mol O₂',
+          '71.10 g KO₂',
+          '1 mol KO₂',
+          '1 mol O₂',
+          '32.00 g O₂',
+        ],
+        correctSteps: [{ num: '3 mol O₂', den: '4 mol KO₂' }],
+      },
+      targetUnit: 'mol O₂',
+      correctMass: 1.5,
+      tolerance: 0.05,
     },
   },
 };

@@ -137,6 +137,28 @@ export function evaluateSetPerformance(
   const q5Correct = q5R1Ok + q5R2Ok + q5LimOk + q5PartAMcqOk + q5ProdOk + q5ExcessOk;
   const q5Total = 6;
 
+  // Section 2: Stoich. Calculation (3 checks)
+  const q6 = progress.q6;
+  const q6Steps = q6.steps || [];
+  const q6CoeffsOk = practiceSet.q6.equationParts.correctCoeffs.every(
+    (c, idx) => parseInt(q6.coeffs[idx] || '0', 10) === c
+  )
+    ? 1
+    : 0;
+  const q6TrackOk =
+    q6Steps.length === practiceSet.q6.trackOptions.correctSteps.length &&
+    practiceSet.q6.trackOptions.correctSteps.every(
+      (expected, idx) =>
+        q6Steps[idx]?.num === expected.num && q6Steps[idx]?.den === expected.den
+    )
+      ? 1
+      : 0;
+  const q6MassOk = approxEqual(q6.finalMass, practiceSet.q6.correctMass, practiceSet.q6.tolerance)
+    ? 1
+    : 0;
+  const q6Correct = q6CoeffsOk + q6TrackOk + q6MassOk;
+  const q6Total = 3;
+
   const sections: SectionPerformance[] = [
     {
       key: 'q4',
@@ -149,8 +171,18 @@ export function evaluateSetPerformance(
       percent: q4.submitted ? Math.round((q4Correct / q4Total) * 100) : null,
     },
     {
+      key: 'q6',
+      label: '2. Stoich. Calculation',
+      submitted: q6.submitted,
+      attempts: engagement.attempts.q6,
+      timeSpentSec: engagement.timeSpentSec.q6,
+      correctCount: q6Correct,
+      totalCount: q6Total,
+      percent: q6.submitted ? Math.round((q6Correct / q6Total) * 100) : null,
+    },
+    {
       key: 'q1',
-      label: '2. Stoichiometry',
+      label: '3. Stoichiometry',
       submitted: q1.submitted,
       attempts: engagement.attempts.q1,
       timeSpentSec: engagement.timeSpentSec.q1,
@@ -160,7 +192,7 @@ export function evaluateSetPerformance(
     },
     {
       key: 'q3',
-      label: '3. Conservation',
+      label: '4. Conservation',
       submitted: q3.submitted,
       attempts: engagement.attempts.q3,
       timeSpentSec: engagement.timeSpentSec.q3,
@@ -170,7 +202,7 @@ export function evaluateSetPerformance(
     },
     {
       key: 'q2',
-      label: '4. Mole Ratios',
+      label: '5. Mole Ratios',
       submitted: q2.submitted,
       attempts: engagement.attempts.q2,
       timeSpentSec: engagement.timeSpentSec.q2,
@@ -180,7 +212,7 @@ export function evaluateSetPerformance(
     },
     {
       key: 'q5',
-      label: '5. Limiting Reactant',
+      label: '6. Limiting Reactant',
       submitted: q5.submitted,
       attempts: engagement.attempts.q5,
       timeSpentSec: engagement.timeSpentSec.q5,
