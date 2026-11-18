@@ -147,7 +147,6 @@ export interface Question5Data {
   excessReactantFormula: string;
   tolerance: number;
   partAMcq: McqItem;
-  partCMcq: McqItem;
 }
 
 export interface PracticeSet {
@@ -434,19 +433,6 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         feedbackCorrect: 'Correct! Comparing required moles (2.64 mol Mg) against available moles (3.09 mol Mg) proves TiCl₄ limits.',
         feedbackIncorrect: 'Never compare raw gram masses or coefficients alone—compare moles required vs moles available.',
       },
-      partCMcq: {
-        id: 'q5a-partC-mcq',
-        question: 'Which calculation correctly determines the excess moles remaining in Part C?',
-        options: [
-          '3.09 mol Mg − 1.32 mol TiCl₄ = 1.77 mol Mg',
-          '250.0 g − 75.0 g = 175.0 g excess',
-          '3.09 mol Mg (initial) − 2.64 mol Mg (consumed by 1.32 mol TiCl₄) = 0.45 mol Mg remaining',
-          '1.32 mol TiCl₄ × 2 = 2.64 mol Mg remaining',
-        ],
-        correctIndex: 2,
-        feedbackCorrect: 'Correct! Subtract moles of Mg consumed (2 × 1.32 = 2.64 mol) from initial Mg (3.09 mol).',
-        feedbackIncorrect: 'Make sure you subtract the moles of Mg actually consumed (using the 2:1 ratio) from the initial moles of Mg.',
-      },
     },
   },
 
@@ -721,19 +707,6 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         feedbackCorrect: 'Correct! 5.00 mol CO needs 10.00 mol H₂, so having only 7.94 mol H₂ makes H₂ limiting.',
         feedbackIncorrect: 'Compare the required 2:1 H₂-to-CO ratio against the actual moles present.',
       },
-      partCMcq: {
-        id: 'q5b-partC-mcq',
-        question: 'Which calculation correctly determines the excess moles remaining in Part C?',
-        options: [
-          '7.94 mol H₂ − 5.00 mol CO = 2.94 mol CO',
-          '5.00 mol CO (initial) − 3.97 mol CO (consumed by 7.94 mol H₂) = 1.03 mol CO remaining',
-          '5.00 mol CO − 7.94 mol H₂ = −2.94 mol CO',
-          '140.0 g − 16.0 g = 124.0 g excess',
-        ],
-        correctIndex: 1,
-        feedbackCorrect: 'Correct! 7.94 mol H₂ consumes half as many moles of CO (3.97 mol), leaving 1.03 mol CO.',
-        feedbackIncorrect: 'Subtract the moles of CO consumed by 7.94 mol H₂ from the 5.00 mol CO initially present.',
-      },
     },
   },
 
@@ -1007,19 +980,6 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         correctIndex: 1,
         feedbackCorrect: 'Correct! 2.50 mol SiO₂ needs 7.49 mol C, which is less than the 8.33 mol C available.',
         feedbackIncorrect: 'Check required moles using the 3:1 C-to-SiO₂ ratio against available moles.',
-      },
-      partCMcq: {
-        id: 'q5c-partC-mcq',
-        question: 'Which calculation correctly determines the excess moles remaining in Part C?',
-        options: [
-          '8.33 mol C − 2.50 mol SiO₂ = 5.83 mol C',
-          '8.33 mol C (initial) − 7.49 mol C (consumed by 2.50 mol SiO₂) = 0.84 mol C remaining',
-          '150.0 g − 100.0 g = 50.0 g excess',
-          '2.50 mol × 2 = 5.00 mol C remaining',
-        ],
-        correctIndex: 1,
-        feedbackCorrect: 'Correct! Subtract 7.49 mol C consumed from 8.33 mol C initially present.',
-        feedbackIncorrect: 'Multiply 2.50 mol SiO₂ by 3 to find moles of C consumed, then subtract from 8.33 mol.',
       },
     },
   },

@@ -2,9 +2,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { PRACTICE_SETS, SetId } from './data/reviewSets';
 import {
   AllSetsProgress,
+  createEmptyEngagementLog,
   createEmptyReflection,
   createEmptySetProgress,
+  EngagementLog,
   ReflectionState,
+  SectionKey,
   SetUserProgress,
 } from './types/progress';
 import {
@@ -18,9 +21,13 @@ import { HomeworkReflectionView } from './components/HomeworkReflectionView';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 
 type ActiveSection = 'exam' | 'reflection';
+type AllSetsEngagement = Record<SetId, EngagementLog>;
 
 const STORAGE_KEY = 'unit3-stoichiometry-review-v3';
 const REFLECTION_STORAGE_KEY = 'unit3-stoichiometry-reflection-v2';
+const ENGAGEMENT_STORAGE_KEY = 'unit3-stoichiometry-engagement-v1';
+
+const QUESTION_KEYS: SectionKey[] = ['q1', 'q2', 'q3', 'q4', 'q5'];
 
 const STEP_LABELS = [
   '1. Error Analysis',
@@ -62,12 +69,49 @@ function loadInitialReflection(): ReflectionState {
   }
 }
 
+function mergeEngagement(saved?: Partial<EngagementLog>): EngagementLog {
+  const base = createEmptyEngagementLog();
+  if (!saved) return base;
+  return {
+    startedAtIso: saved.startedAtIso || base.startedAtIso,
+    timeSpentSec: {
+      ...base.timeSpentSec,
+      ...(saved.timeSpentSec || {}),
+    },
+    attempts: {
+      ...base.attempts,
+      ...(saved.attempts || {}),
+    },
+  };
+}
+
+function loadInitialEngagement(): AllSetsEngagement {
+  const defaults: AllSetsEngagement = {
+    A: createEmptyEngagementLog(),
+    B: createEmptyEngagementLog(),
+    C: createEmptyEngagementLog(),
+  };
+  try {
+    const raw = localStorage.getItem(ENGAGEMENT_STORAGE_KEY);
+    if (!raw) return defaults;
+    const parsed = JSON.parse(raw) as Partial<AllSetsEngagement>;
+    return {
+      A: mergeEngagement(parsed.A),
+      B: mergeEngagement(parsed.B),
+      C: mergeEngagement(parsed.C),
+    };
+  } catch {
+    return defaults;
+  }
+}
+
 export default function App() {
   const [section, setSection] = useState<ActiveSection>('exam');
   const [activeSetId, setActiveSetId] = useState<SetId>('A');
   const [questionIndex, setQuestionIndex] = useState<number>(0);
   const [allProgress, setAllProgress] = useState<AllSetsProgress>(loadInitialProgress);
   const [reflection, setReflection] = useState<ReflectionState>(loadInitialReflection);
+  const [allEngagement, setAllEngagement] = useState<AllSetsEngagement>(loadInitialEngagement);
 
   useEffect(() => {
     try {
@@ -85,8 +129,41 @@ export default function App() {
     }
   }, [reflection]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(ENGAGEMENT_STORAGE_KEY, JSON.stringify(allEngagement));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [allEngagement]);
+
+  useEffect(() => {
+    const activeTimeKey: SectionKey | 'reflection' =
+      section === 'reflection' ? 'reflection' : QUESTION_KEYS[questionIndex] || 'q1';
+
+    const intervalId = window.setInterval(() => {
+      if (document.hidden) return;
+      setAllEngagement((prev) => {
+        const currentLog = prev[activeSetId];
+        return {
+          ...prev,
+          [activeSetId]: {
+            ...currentLog,
+            timeSpentSec: {
+              ...currentLog.timeSpentSec,
+              [activeTimeKey]: (currentLog.timeSpentSec[activeTimeKey] || 0) + 1,
+            },
+          },
+        };
+      });
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [activeSetId, questionIndex, section]);
+
   const currentSet = PRACTICE_SETS[activeSetId];
   const currentProgress = allProgress[activeSetId];
+  const currentEngagement = allEngagement[activeSetId];
 
   const updateCurrentProgress = (updater: (prev: SetUserProgress) => SetUserProgress) => {
     setAllProgress((prev) => ({
@@ -95,10 +172,30 @@ export default function App() {
     }));
   };
 
+  const recordSectionAttempt = (key: SectionKey) => {
+    setAllEngagement((prev) => {
+      const currentLog = prev[activeSetId];
+      return {
+        ...prev,
+        [activeSetId]: {
+          ...currentLog,
+          attempts: {
+            ...currentLog.attempts,
+            [key]: (currentLog.attempts[key] || 0) + 1,
+          },
+        },
+      };
+    });
+  };
+
   const handleResetSet = () => {
     setAllProgress((prev) => ({
       ...prev,
       [activeSetId]: createEmptySetProgress(),
+    }));
+    setAllEngagement((prev) => ({
+      ...prev,
+      [activeSetId]: createEmptyEngagementLog(),
     }));
   };
 
@@ -282,6 +379,7 @@ export default function App() {
                 onChange={(next) =>
                   updateCurrentProgress((prev) => ({ ...prev, q1: next }))
                 }
+                onSubmitAttempt={() => recordSectionAttempt('q1')}
               />
             )}
             {questionIndex === 1 && (
@@ -291,6 +389,7 @@ export default function App() {
                 onChange={(next) =>
                   updateCurrentProgress((prev) => ({ ...prev, q2: next }))
                 }
+                onSubmitAttempt={() => recordSectionAttempt('q2')}
               />
             )}
             {questionIndex === 2 && (
@@ -300,6 +399,7 @@ export default function App() {
                 onChange={(next) =>
                   updateCurrentProgress((prev) => ({ ...prev, q3: next }))
                 }
+                onSubmitAttempt={() => recordSectionAttempt('q3')}
               />
             )}
             {questionIndex === 3 && (
@@ -309,6 +409,7 @@ export default function App() {
                 onChange={(next) =>
                   updateCurrentProgress((prev) => ({ ...prev, q4: next }))
                 }
+                onSubmitAttempt={() => recordSectionAttempt('q4')}
               />
             )}
             {questionIndex === 4 && (
@@ -318,6 +419,7 @@ export default function App() {
                 onChange={(next) =>
                   updateCurrentProgress((prev) => ({ ...prev, q5: next }))
                 }
+                onSubmitAttempt={() => recordSectionAttempt('q5')}
               />
             )}
 
@@ -360,7 +462,9 @@ export default function App() {
         {section === 'reflection' && (
           <HomeworkReflectionView
             activeSetId={activeSetId}
+            practiceSet={currentSet}
             progress={currentProgress}
+            engagement={currentEngagement}
             state={reflection}
             onChange={setReflection}
             onBackToExam={() => {

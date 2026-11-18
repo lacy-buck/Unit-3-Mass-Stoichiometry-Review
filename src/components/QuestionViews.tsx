@@ -115,7 +115,8 @@ export const Question1View: React.FC<{
   data: Question1Data;
   state: Q1UserState;
   onChange: (next: Q1UserState) => void;
-}> = ({ data, state, onChange }) => {
+  onSubmitAttempt?: () => void;
+}> = ({ data, state, onChange, onSubmitAttempt }) => {
   const [showHint, setShowHint] = useState(false);
 
   const toggleFlag = (id: string) => {
@@ -503,7 +504,10 @@ export const Question1View: React.FC<{
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <button
             type="button"
-            onClick={() => onChange({ ...state, submitted: true })}
+            onClick={() => {
+              onSubmitAttempt?.();
+              onChange({ ...state, submitted: true });
+            }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
             Submit Section 1
@@ -524,7 +528,8 @@ export const Question2View: React.FC<{
   data: Question2Data;
   state: Q2UserState;
   onChange: (next: Q2UserState) => void;
-}> = ({ data, state, onChange }) => {
+  onSubmitAttempt?: () => void;
+}> = ({ data, state, onChange, onSubmitAttempt }) => {
   const [showHint, setShowHint] = useState(false);
 
   const predictionOk = state.prediction === data.expectedPrediction;
@@ -705,7 +710,10 @@ export const Question2View: React.FC<{
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <button
             type="button"
-            onClick={() => onChange({ ...state, submitted: true })}
+            onClick={() => {
+              onSubmitAttempt?.();
+              onChange({ ...state, submitted: true });
+            }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
             Submit Section 2
@@ -726,7 +734,8 @@ export const Question3View: React.FC<{
   data: Question3Data;
   state: Q3UserState;
   onChange: (next: Q3UserState) => void;
-}> = ({ data, state, onChange }) => {
+  onSubmitAttempt?: () => void;
+}> = ({ data, state, onChange, onSubmitAttempt }) => {
   const correctCount = data.questions.filter(
     (q) => state.answers[q.id] === q.correctIndex
   ).length;
@@ -766,7 +775,10 @@ export const Question3View: React.FC<{
       <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => onChange({ ...state, submitted: true })}
+          onClick={() => {
+            onSubmitAttempt?.();
+            onChange({ ...state, submitted: true });
+          }}
           className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
         >
           Submit Section 3
@@ -788,7 +800,8 @@ export const Question4View: React.FC<{
   data: Question4Data;
   state: Q4UserState;
   onChange: (next: Q4UserState) => void;
-}> = ({ data, state, onChange }) => {
+  onSubmitAttempt?: () => void;
+}> = ({ data, state, onChange, onSubmitAttempt }) => {
   const toggleFlagZone = (id: string) => {
     const exists = state.flaggedZoneIds.includes(id);
     const next = exists
@@ -1038,7 +1051,10 @@ export const Question4View: React.FC<{
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <button
             type="button"
-            onClick={() => onChange({ ...state, submitted: true })}
+            onClick={() => {
+              onSubmitAttempt?.();
+              onChange({ ...state, submitted: true });
+            }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
             Submit Section 4
@@ -1059,7 +1075,8 @@ export const Question5View: React.FC<{
   data: Question5Data;
   state: Q5UserState;
   onChange: (next: Q5UserState) => void;
-}> = ({ data, state, onChange }) => {
+  onSubmitAttempt?: () => void;
+}> = ({ data, state, onChange, onSubmitAttempt }) => {
   const r1Ok = approxEqual(state.molesR1, data.correctMolesR1, data.tolerance);
   const r2Ok = approxEqual(state.molesR2, data.correctMolesR2, data.tolerance);
   const limOk = state.limiting === data.correctLimiting;
@@ -1217,22 +1234,16 @@ export const Question5View: React.FC<{
             errText="Subtract the moles consumed by the limiting reactant from initial moles of the excess reagent."
           />
         )}
-
-        <div className="pt-2 border-t border-slate-100">
-          <McqBlock
-            item={data.partCMcq}
-            selectedIndex={state.partCChoice}
-            submitted={state.submitted}
-            onSelect={(idx) => onChange({ ...state, partCChoice: idx })}
-          />
-        </div>
       </div>
 
       {/* Submit Section 5 */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => onChange({ ...state, submitted: true })}
+          onClick={() => {
+            onSubmitAttempt?.();
+            onChange({ ...state, submitted: true });
+          }}
           className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
         >
           Submit Section 5

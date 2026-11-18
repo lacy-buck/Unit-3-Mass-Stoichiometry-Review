@@ -42,7 +42,6 @@ export interface Q5UserState {
   partAChoice?: number;
   maxProductMoles: string;
   excessMolesRemaining: string;
-  partCChoice?: number;
   submitted: boolean;
 }
 
@@ -104,10 +103,17 @@ export function createEmptySetProgress(): SetUserProgress {
       partAChoice: undefined,
       maxProductMoles: '',
       excessMolesRemaining: '',
-      partCChoice: undefined,
       submitted: false,
     },
   };
+}
+
+export type SectionKey = 'q1' | 'q2' | 'q3' | 'q4' | 'q5';
+
+export interface EngagementLog {
+  startedAtIso: string;
+  timeSpentSec: Record<SectionKey | 'reflection', number>;
+  attempts: Record<SectionKey, number>;
 }
 
 export function createEmptyReflection(): ReflectionState {
@@ -117,5 +123,26 @@ export function createEmptyReflection(): ReflectionState {
     strongestTakeaway: '',
     testDayStrategy: '',
     submitted: false,
+  };
+}
+
+export function createEmptyEngagementLog(): EngagementLog {
+  return {
+    startedAtIso: new Date().toISOString(),
+    timeSpentSec: {
+      q1: 0,
+      q2: 0,
+      q3: 0,
+      q4: 0,
+      q5: 0,
+      reflection: 0,
+    },
+    attempts: {
+      q1: 0,
+      q2: 0,
+      q3: 0,
+      q4: 0,
+      q5: 0,
+    },
   };
 }

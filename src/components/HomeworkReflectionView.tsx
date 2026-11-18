@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { jsPDF } from 'jspdf';
-import { SetId } from '../data/reviewSets';
-import { ReflectionState, SetUserProgress } from '../types/progress';
+import { PracticeSet, SetId } from '../data/reviewSets';
+import { EngagementLog, ReflectionState, SetUserProgress } from '../types/progress';
+import { evaluateSetPerformance, formatDuration, OverallPerformance } from '../utils/scoring';
 import { CheckCircle2, FileDown } from 'lucide-react';
 
 interface HomeworkReflectionViewProps {
   activeSetId: SetId;
+  practiceSet: PracticeSet;
   progress: SetUserProgress;
+  engagement: EngagementLog;
   state: ReflectionState;
   onChange: (next: ReflectionState) => void;
   onBackToExam: () => void;
@@ -24,37 +27,43 @@ const COMMON_MISTAKE_OPTIONS = [
 function downloadReflectionPdf(
   state: ReflectionState,
   activeSetId: SetId,
-  progress: SetUserProgress
+  performance: OverallPerformance
 ) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
   const margin = 52;
   const pageWidth = doc.internal.pageSize.getWidth();
   const maxLineWidth = pageWidth - margin * 2;
-  let y = 56;
+  let y = 52;
 
-  const addWrappedText = (text: string, fontSize: number, bold = false, spacing = 16) => {
+  const ensureSpace = (needed: number) => {
+    if (y + needed > 745) {
+      doc.addPage();
+      y = 52;
+    }
+  };
+
+  const addWrappedText = (text: string, fontSize: number, bold = false, spacing = 14) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
     doc.setFontSize(fontSize);
     const lines = doc.splitTextToSize(text || '—', maxLineWidth);
     for (const line of lines) {
-      if (y > 740) {
-        doc.addPage();
-        y = 56;
-      }
+      ensureSpace(fontSize * 1.4);
       doc.text(line, margin, y);
-      y += fontSize * 1.4;
+      y += fontSize * 1.38;
     }
-    y += spacing - fontSize * 0.4;
+    y += spacing - fontSize * 0.38;
   };
 
   // Header
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(17);
-  doc.text('Unit 3 Chemistry Review — Reflection', margin, y);
-  y += 24;
+  doc.setTextColor(15, 23, 42);
+  doc.text('Unit 3 Chemistry Review — Reflection & Engagement Log', margin, y);
+  y += 22;
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
+  doc.setFontSize(10.5);
+  doc.setTextColor(51, 65, 85);
   const studentDisplay = state.studentName.trim() || 'Not entered';
   const dateDisplay = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
@@ -63,51 +72,108 @@ function downloadReflectionPdf(
   });
   doc.text(`Student Name: ${studentDisplay}`, margin, y);
   doc.text(`Date: ${dateDisplay}`, pageWidth - margin - 130, y);
-  y += 18;
-
-  const completedSections = [
-    progress.q1.submitted ? '1' : null,
-    progress.q2.submitted ? '2' : null,
-    progress.q3.submitted ? '3' : null,
-    progress.q4.submitted ? '4' : null,
-    progress.q5.submitted ? '5' : null,
-  ].filter(Boolean);
+  y += 16;
 
   doc.text(
-    `Practice Set: Set ${activeSetId}   |   Submitted Sections: ${
-      completedSections.length > 0 ? completedSections.join(', ') : 'None yet'
+    `Practice Set: Set ${activeSetId}   |   Sections Checked: ${performance.submittedCount} / 5   |   Total Active Time: ${formatDuration(
+      performance.totalTimeSec
+    )}   |   Overall Accuracy: ${
+      performance.overallPercent !== null
+        ? `${performance.overallPercent}% (${performance.overallCorrect}/${performance.overallPossible})`
+        : 'Not checked yet'
     }`,
     margin,
     y
   );
-  y += 16;
+  y += 14;
 
   doc.setDrawColor(203, 213, 225);
   doc.line(margin, y, pageWidth - margin, y);
-  y += 26;
+  y += 22;
 
-  // Question 1 (Error Pattern)
+  // Student Engagement Log Table
+  doc.setTextColor(15, 23, 42);
+  addWrappedText('Student Engagement & Accuracy Log', 12, true, 10);
+
+  const colX = {
+    section: margin + 8,
+    status: margin + 175,
+    checks: margin + 260,
+    time: margin + 325,
+    accuracy: margin + 395,
+  };
+
+  ensureSpace(26);
+  doc.setFillColor(241, 245, 249);
+  doc.rect(margin, y - 12, maxLineWidth, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('Section', colX.section, y);
+  doc.text('Status', colX.status, y);
+  doc.text('Checks', colX.checks, y);
+  doc.text('Time', colX.time, y);
+  doc.text('Accuracy', colX.accuracy, y);
+  y += 18;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(15, 23, 42);
+
+  for (const row of performance.sections) {
+    ensureSpace(20);
+    const checksDisplay = String(
+      row.attempts > 0 ? row.attempts : row.submitted ? 1 : 0
+    );
+    const accuracyDisplay =
+      row.percent !== null
+        ? `${row.percent}% (${row.correctCount}/${row.totalCount})`
+        : '—';
+
+    doc.text(row.label, colX.section, y);
+    doc.text(row.submitted ? 'Checked' : 'Not checked', colX.status, y);
+    doc.text(checksDisplay, colX.checks, y);
+    doc.text(formatDuration(row.timeSpentSec), colX.time, y);
+    doc.text(accuracyDisplay, colX.accuracy, y);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, y + 6, pageWidth - margin, y + 6);
+    y += 18;
+  }
+
+  // Reflection time row
+  ensureSpace(22);
+  doc.setTextColor(71, 85, 105);
+  doc.text('6. Reflection', colX.section, y);
+  doc.text('Active', colX.status, y);
+  doc.text('—', colX.checks, y);
+  doc.text(formatDuration(performance.reflectionTimeSec), colX.time, y);
+  doc.text('—', colX.accuracy, y);
+  y += 24;
+
+  // Reflection Q1
+  doc.setTextColor(15, 23, 42);
   addWrappedText('1. Mistake That Tripped Me Up Most / Requires Attention', 12, true, 10);
-  addWrappedText(state.commonMistake || 'No selection made', 11, false, 20);
+  addWrappedText(state.commonMistake || 'No selection made', 10.5, false, 18);
 
-  // Question 2 (Written Reflection)
-  addWrappedText('2. Written Reflection', 12, true, 12);
+  // Reflection Q2
+  addWrappedText('2. Written Reflection', 12, true, 10);
 
   addWrappedText(
     'What is one concept from Unit 3 that clicked more clearly during this review, and why?',
-    11,
+    10.5,
     true,
     8
   );
-  addWrappedText(state.strongestTakeaway.trim() || 'No response entered.', 11, false, 18);
+  addWrappedText(state.strongestTakeaway.trim() || 'No response entered.', 10.5, false, 16);
 
   addWrappedText(
     'What specific check will you perform on test day to prevent careless stoichiometry errors?',
-    11,
+    10.5,
     true,
     8
   );
-  addWrappedText(state.testDayStrategy.trim() || 'No response entered.', 11, false, 20);
+  addWrappedText(state.testDayStrategy.trim() || 'No response entered.', 10.5, false, 18);
 
   const safeName = state.studentName
     .trim()
@@ -123,20 +189,27 @@ function downloadReflectionPdf(
 
 export const HomeworkReflectionView: React.FC<HomeworkReflectionViewProps> = ({
   activeSetId,
+  practiceSet,
   progress,
+  engagement,
   state,
   onChange,
   onBackToExam,
 }) => {
-  const canSubmit =
+  const performance = useMemo(
+    () => evaluateSetPerformance(practiceSet, progress, engagement),
+    [practiceSet, progress, engagement]
+  );
+
+  const isComplete =
     Boolean(state.commonMistake) &&
     state.strongestTakeaway.trim().length > 0 &&
     state.testDayStrategy.trim().length > 0;
 
-  const handleSubmitAndDownload = () => {
+  const handleDownload = () => {
     const nextState = { ...state, submitted: true };
     onChange(nextState);
-    downloadReflectionPdf(nextState, activeSetId, progress);
+    downloadReflectionPdf(nextState, activeSetId, performance);
   };
 
   return (
@@ -149,8 +222,99 @@ export const HomeworkReflectionView: React.FC<HomeworkReflectionViewProps> = ({
           Homework Reflection
         </h1>
         <p className="text-sm text-slate-600 leading-relaxed">
-          Complete the reflection below and submit to download a PDF summary to turn in.
+          Review your engagement log, complete the reflection below, and download a PDF summary to
+          turn in.
         </p>
+      </div>
+
+      {/* Student Engagement & Performance Log */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold text-slate-900">
+            Student Engagement Log (Set {activeSetId})
+          </h2>
+          <span className="text-xs text-slate-500">
+            Included automatically in your downloaded PDF
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+            <div className="text-xs text-slate-500">Total Active Time</div>
+            <div className="text-lg font-semibold font-mono tabular-nums text-slate-900 mt-0.5">
+              {formatDuration(performance.totalTimeSec)}
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+            <div className="text-xs text-slate-500">Sections Checked</div>
+            <div className="text-lg font-semibold font-mono tabular-nums text-slate-900 mt-0.5">
+              {performance.submittedCount} / 5
+            </div>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">
+            <div className="text-xs text-slate-500">Overall Accuracy</div>
+            <div className="text-lg font-semibold font-mono tabular-nums text-slate-900 mt-0.5">
+              {performance.overallPercent !== null
+                ? `${performance.overallPercent}% (${performance.overallCorrect}/${performance.overallPossible})`
+                : '—'}
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+          <table className="w-full text-left text-xs sm:text-sm border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium">
+                <th className="py-2.5 px-3">Section</th>
+                <th className="py-2.5 px-3">Status</th>
+                <th className="py-2.5 px-3 text-right">Checks</th>
+                <th className="py-2.5 px-3 text-right">Time</th>
+                <th className="py-2.5 px-3 text-right">Accuracy</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {performance.sections.map((row) => {
+                const checks = row.attempts > 0 ? row.attempts : row.submitted ? 1 : 0;
+                return (
+                  <tr key={row.key} className="text-slate-800">
+                    <td className="py-2.5 px-3 font-medium">{row.label}</td>
+                    <td className="py-2.5 px-3">
+                      <span
+                        className={
+                          row.submitted ? 'text-emerald-700 font-medium' : 'text-slate-400'
+                        }
+                      >
+                        {row.submitted ? 'Checked' : 'Not checked'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums text-slate-600">
+                      {checks}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums text-slate-700">
+                      {formatDuration(row.timeSpentSec)}
+                    </td>
+                    <td className="py-2.5 px-3 text-right font-mono tabular-nums font-medium">
+                      {row.percent !== null
+                        ? `${row.percent}% (${row.correctCount}/${row.totalCount})`
+                        : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
+              <tr className="text-slate-600 bg-slate-50/50">
+                <td className="py-2.5 px-3 font-medium">6. Reflection</td>
+                <td className="py-2.5 px-3">In progress</td>
+                <td className="py-2.5 px-3 text-right font-mono tabular-nums">—</td>
+                <td className="py-2.5 px-3 text-right font-mono tabular-nums">
+                  {formatDuration(performance.reflectionTimeSec)}
+                </td>
+                <td className="py-2.5 px-3 text-right font-mono tabular-nums">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Student Name for PDF Header */}
@@ -237,27 +401,27 @@ export const HomeworkReflectionView: React.FC<HomeworkReflectionViewProps> = ({
 
           <button
             type="button"
-            onClick={handleSubmitAndDownload}
+            onClick={handleDownload}
             className="inline-flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer"
           >
             <FileDown className="w-4 h-4" />
-            Submit &amp; Download PDF
+            Download PDF
           </button>
         </div>
 
         {state.submitted && (
           <div
             className={`p-4 rounded-xl border text-sm flex items-start gap-2.5 ${
-              canSubmit
+              isComplete
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 : 'bg-amber-50 border-amber-200 text-amber-900'
             }`}
           >
             <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
             <div>
-              {canSubmit ? (
+              {isComplete ? (
                 <div className="font-semibold">
-                  Reflection PDF downloaded! You can now turn it in.
+                  Reflection &amp; engagement PDF downloaded! You can now turn it in.
                 </div>
               ) : (
                 <div>
