@@ -510,10 +510,10 @@ export const Question1View: React.FC<{
             }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
-            Submit Section 1
+            Submit Section 2
           </button>
           {state.submitted && (
-            <span className="text-xs text-slate-600">Section 1 checked</span>
+            <span className="text-xs text-slate-600">Section 2 checked</span>
           )}
         </div>
       </div>
@@ -716,10 +716,10 @@ export const Question2View: React.FC<{
             }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
-            Submit Section 2
+            Submit Section 4
           </button>
           {state.submitted && (
-            <span className="text-xs text-slate-600">Section 2 checked</span>
+            <span className="text-xs text-slate-600">Section 4 checked</span>
           )}
         </div>
       </div>
@@ -826,13 +826,16 @@ export const Question4View: React.FC<{
     .filter(([, cnt]) => (cnt || 0) > 0)
     .map(([kind, count]) => ({ kind: kind as ParticleKind, count: count! }));
 
-  const errorsSpotted = data.errorZones.every((z) => state.flaggedZoneIds.includes(z.id));
+  const errorsSpotted = data.studentAuditCards.every((card) =>
+    card.isError ? state.flaggedZoneIds.includes(card.id) : !state.flaggedZoneIds.includes(card.id)
+  );
   const diagramCorrect =
     data.availableStamps.every(
       (s) => (state.builtCounts[s.kind] || 0) === (data.correctAfterCounts[s.kind] || 0)
     ) && Object.values(state.builtCounts).reduce((a, b) => (a || 0) + (b || 0), 0) > 0;
   const limitingCorrect = state.limitingReactant === data.correctLimitingReactant;
   const countCorrect = parseInt(state.productCount || '0', 10) === data.correctProductCount;
+  const excessCorrect = parseInt(state.excessCount || '-1', 10) === data.correctExcessCount;
 
   return (
     <div className="space-y-6">
@@ -866,9 +869,15 @@ export const Question4View: React.FC<{
 
         {/* Student's Flawed Work */}
         <div className="border border-slate-300 rounded-xl p-4 bg-slate-50 space-y-4">
-          <span className="block text-xs font-semibold text-slate-700">
-            Step A: Audit the student’s work and click all 3 errors to flag them
-          </span>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-slate-700">
+              Step A: Audit the student’s After Reaction sketch and answers below — click the 2
+              mistakes to flag them
+            </span>
+            <span className="text-xs text-slate-500 tabular-nums">
+              {state.flaggedZoneIds.length} flagged
+            </span>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ParticleBox
@@ -886,36 +895,73 @@ export const Question4View: React.FC<{
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            {data.errorZones.map((zone) => {
-              const selected = state.flaggedZoneIds.includes(zone.id);
-              return (
-                <button
-                  key={zone.id}
-                  type="button"
-                  onClick={() => toggleFlagZone(zone.id)}
-                  className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
-                    selected
-                      ? 'border-rose-600 bg-rose-50 text-rose-900 ring-1 ring-rose-500'
-                      : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
-                  }`}
-                >
-                  <div className="text-xs font-semibold">{zone.label}</div>
-                  <div className="text-[11px] opacity-80 mt-0.5">
-                    {selected ? 'Circled as mistake' : 'Click to circle as mistake'}
-                  </div>
-                </button>
-              );
-            })}
+          <div className="space-y-2">
+            <div className="text-xs font-semibold text-slate-600">
+              Student’s Answers (click any answer that is incorrect):
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {data.studentAuditCards.map((card) => {
+                const selected = state.flaggedZoneIds.includes(card.id);
+                return (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => toggleFlagZone(card.id)}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer ${
+                      selected
+                        ? 'border-rose-600 bg-rose-50 text-rose-900 ring-1 ring-rose-500'
+                        : 'border-slate-200 bg-white hover:border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    <div className="text-[11px] font-medium text-slate-500">
+                      {card.promptLabel}
+                    </div>
+                    <div className="text-sm font-semibold chem-eq text-slate-900 mt-0.5">
+                      {card.studentAnswer}
+                    </div>
+                    <div className="text-[11px] opacity-80 mt-1">
+                      {selected ? 'Flagged as mistake' : 'Click to flag if wrong'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {state.submitted && (
             <div className="pt-2 border-t border-slate-200 space-y-2">
               <StatusFeedback
                 ok={errorsSpotted}
-                okText="All 3 student mistakes flagged!"
-                errText="Click all 3 flawed elements in the student's work above."
+                okText="Both student mistakes flagged!"
+                errText="Flag only the 2 mistakes in the student's sketch and answers above."
               />
+              <div className="grid gap-1.5 text-xs">
+                {data.studentAuditCards.map((card) => {
+                  const userFlagged = state.flaggedZoneIds.includes(card.id);
+                  if (!userFlagged && !card.isError) return null;
+                  return (
+                    <div
+                      key={card.id}
+                      className={`p-2 rounded-lg border ${
+                        card.isError && userFlagged
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                          : card.isError && !userFlagged
+                            ? 'bg-amber-50 border-amber-200 text-amber-900'
+                            : 'bg-rose-50 border-rose-200 text-rose-900'
+                      }`}
+                    >
+                      <span className="font-semibold">
+                        {card.isError
+                          ? userFlagged
+                            ? `Caught Error (${card.promptLabel}): `
+                            : `Missed Error (${card.promptLabel}): `
+                          : `Actually Valid (${card.promptLabel}): `}
+                      </span>
+                      {card.feedback}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -979,7 +1025,7 @@ export const Question4View: React.FC<{
               })}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <div className="space-y-1">
                 <label className="block text-xs font-medium text-slate-600">
                   Limiting Reactant:
@@ -1012,6 +1058,21 @@ export const Question4View: React.FC<{
                   className="w-full px-3 py-2 text-sm font-mono tabular-nums bg-slate-50 border border-slate-300 rounded-lg"
                 />
               </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-slate-600">
+                  Excess {data.excessFormula} Remaining:
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={state.excessCount || ''}
+                  onChange={(e) => onChange({ ...state, excessCount: e.target.value })}
+                  placeholder="0"
+                  className="w-full px-3 py-2 text-sm font-mono tabular-nums bg-slate-50 border border-slate-300 rounded-lg"
+                />
+              </div>
             </div>
           </div>
 
@@ -1031,22 +1092,12 @@ export const Question4View: React.FC<{
               errText="Recount atoms from the Before box—check solid product units and intact excess particles."
             />
             <StatusFeedback
-              ok={limitingCorrect && countCorrect}
-              okText="Limiting reactant & product count correct."
-              errText="Verify which reactant runs out first and total solid units made."
+              ok={limitingCorrect && countCorrect && excessCorrect}
+              okText="Limiting reactant, product count, & excess particles correct."
+              errText="Verify which reactant runs out first, total solid units made, and excess molecules left."
             />
           </div>
         )}
-
-        {/* Multiple-Choice Explanation */}
-        <div className="pt-3 border-t border-slate-100">
-          <McqBlock
-            item={data.explanationMcq}
-            selectedIndex={state.explanationChoice}
-            submitted={state.submitted}
-            onSelect={(idx) => onChange({ ...state, explanationChoice: idx })}
-          />
-        </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
           <button
@@ -1057,10 +1108,10 @@ export const Question4View: React.FC<{
             }}
             className="px-5 py-2 text-sm font-medium text-white bg-sky-700 hover:bg-sky-800 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
           >
-            Submit Section 4
+            Submit Section 1
           </button>
           {state.submitted && (
-            <span className="text-xs text-slate-600">Section 4 checked</span>
+            <span className="text-xs text-slate-600">Section 1 checked</span>
           )}
         </div>
       </div>

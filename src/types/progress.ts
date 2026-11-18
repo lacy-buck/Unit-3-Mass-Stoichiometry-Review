@@ -31,7 +31,7 @@ export interface Q4UserState {
   builtCounts: Partial<Record<ParticleKind, number>>;
   limitingReactant: string;
   productCount: string;
-  explanationChoice?: number;
+  excessCount: string;
   submitted: boolean;
 }
 
@@ -93,7 +93,7 @@ export function createEmptySetProgress(): SetUserProgress {
       builtCounts: {},
       limitingReactant: '',
       productCount: '',
-      explanationChoice: undefined,
+      excessCount: '',
       submitted: false,
     },
     q5: {

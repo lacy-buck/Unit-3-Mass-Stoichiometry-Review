@@ -108,24 +108,23 @@ export interface Question4Data {
   equation: string;
   prompt: string;
   solidFormula: string;
+  excessFormula: string;
   keyDescription: { atomLabel: string; moleculeAtomLabel: string };
   initialParticles: { kind: ParticleKind; count: number }[];
   flawedAfterParticles: { kind: ParticleKind; count: number }[];
-  flawedAnswers: {
-    limitingReactant: string;
-    productCount: string;
-  };
-  errorZones: {
+  studentAuditCards: {
     id: string;
-    label: string;
-    description: string;
+    promptLabel: string;
+    studentAnswer: string;
+    isError: boolean;
+    feedback: string;
   }[];
   availableStamps: ParticleSpec[];
   correctAfterCounts: Partial<Record<ParticleKind, number>>;
   limitingReactantOptions: string[];
   correctLimitingReactant: string;
   correctProductCount: number;
-  explanationMcq: McqItem;
+  correctExcessCount: number;
 }
 
 export interface Question5Data {
@@ -166,7 +165,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     name: 'Practice Set A',
     subtitle: 'Butane combustion, Mg/AgNO₃ prediction, Fe/CuSO₄ lab-loss conservation, MgO solid synthesis, Kroll Ti process',
     q1: {
-      title: '1. Combustion Stoichiometry Error Analysis',
+      title: '2. Stoichiometry',
       skillFocus: 'Equation Balancing · Dimensional Analysis · Molar Mass',
       prompt:
         'Butane (C₄H₁₀) reacts with oxygen gas in a combustion reaction to produce carbon dioxide and water. How many grams of water (H₂O) are produced from burning 29.06 g of C₄H₁₀ in excess oxygen?',
@@ -245,7 +244,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q2: {
-      title: '2. Mole Ratios & Molar Mass Prediction',
+      title: '4. Mole Ratios & Molar Mass Prediction',
       skillFocus: 'Qualitative Prediction · Mole Ratio · Molar Mass',
       context:
         'A student places a measured mass of solid magnesium ribbon into an aqueous solution of silver nitrate to produce solid silver in a single-replacement reaction:',
@@ -341,12 +340,13 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q4: {
-      title: '4. Particulate Diagram: Atoms + Molecules → One Solid',
+      title: '1. Particulate Diagram: Atoms + Molecules → One Solid',
       skillFocus: 'Particulate Models · Limiting Reactants · Solid Formation',
       equation: '2 Mg(s) + O₂(g) → 2 MgO(s)',
       prompt:
         'Single magnesium atoms (Mg) react with oxygen gas molecules (O₂) to form solid magnesium oxide, MgO(s). The left container starts with 4 Mg atoms and 3 O₂ molecules. Flag the mistakes in the student’s "After Reaction" work, then build the corrected container.',
       solidFormula: 'MgO',
+      excessFormula: 'O₂',
       keyDescription: { atomLabel: 'Magnesium (Mg)', moleculeAtomLabel: 'Oxygen (O)' },
       initialParticles: [
         { kind: 'Mg_atom', count: 4 },
@@ -356,25 +356,27 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         { kind: 'MgO_solid', count: 4 },
         { kind: 'O_atom', count: 2 },
       ],
-      flawedAnswers: {
-        limitingReactant: 'O₂',
-        productCount: '2',
-      },
-      errorZones: [
+      studentAuditCards: [
         {
           id: 'err-limiting',
-          label: 'Student Limiting Reactant: "O₂"',
-          description: '4 Mg atoms only need 2 O₂ molecules, so Mg runs out first and O₂ is in excess.',
+          promptLabel: 'Limiting Reactant',
+          studentAnswer: 'O₂',
+          isError: true,
+          feedback: '4 Mg atoms only need 2 O₂ molecules, so Mg runs out first and O₂ is in excess.',
         },
         {
-          id: 'err-count',
-          label: 'Student Product Count: "2"',
-          description: 'Copied the coefficient 2 from the equation instead of counting all 4 MgO solid units formed.',
+          id: 'valid-count',
+          promptLabel: 'Product Particles Made',
+          studentAnswer: '4 MgO',
+          isError: false,
+          feedback: '4 MgO solid units really are formed from the 4 Mg atoms.',
         },
         {
           id: 'err-atoms',
-          label: 'Unpaired Single O Atoms in After Box',
-          description: 'Leftover excess oxygen remains bonded as 1 diatomic O₂ molecule, not 2 separated O atoms.',
+          promptLabel: 'Excess Particles Remaining',
+          studentAnswer: '2 O atoms',
+          isError: true,
+          feedback: 'Leftover excess oxygen stays bonded as 1 diatomic O₂ molecule, not 2 lone O atoms.',
         },
       ],
       availableStamps: [
@@ -386,19 +388,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
       limitingReactantOptions: ['Mg', 'O₂'],
       correctLimitingReactant: 'Mg',
       correctProductCount: 4,
-      explanationMcq: {
-        id: 'q4a-mcq',
-        question: 'Which statement best explains what the student did incorrectly in Problem 4?',
-        options: [
-          'The student had too few Mg atoms, so O₂ ran out first and broke into single atoms.',
-          'Mg is the limiting reactant (4 Mg reacts with 2 O₂ to form 4 MgO solid units), the student copied the equation coefficient "2" instead of counting 4 products, and excess O₂ must stay bonded as 1 diatomic O₂ molecule rather than 2 lone O atoms.',
-          'Solid MgO should be drawn as 2 Mg₂O₂ molecules instead of 4 MgO units.',
-          'All 3 O₂ molecules reacted completely, leaving 1 Mg atom in excess.',
-        ],
-        correctIndex: 1,
-        feedbackCorrect: 'Correct! You identified the limiting reactant, product scaling, and intact diatomic excess molecule.',
-        feedbackIncorrect: 'Check atom counts from the Before box: 4 Mg + 3 O₂ reacts 4 Mg with 2 O₂, leaving 1 intact O₂.',
-      },
+      correctExcessCount: 1,
     },
 
     q5: {
@@ -441,7 +431,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     name: 'Practice Set B',
     subtitle: 'Ethane combustion, Ca/AlCl₃ prediction, Zn/AgNO₃ lab-loss conservation, Li₂O solid synthesis, Methanol synthesis',
     q1: {
-      title: '1. Combustion Stoichiometry Error Analysis',
+      title: '2. Stoichiometry',
       skillFocus: 'Equation Balancing · Dimensional Analysis · Molar Mass',
       prompt:
         'Ethane (C₂H₆) reacts with oxygen gas in a combustion reaction to produce carbon dioxide and water. How many grams of carbon dioxide (CO₂) are produced from burning 15.04 g of C₂H₆ in excess oxygen?',
@@ -519,7 +509,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q2: {
-      title: '2. Mole Ratios & Molar Mass Prediction',
+      title: '4. Mole Ratios & Molar Mass Prediction',
       skillFocus: 'Qualitative Prediction · Mole Ratio · Molar Mass',
       context:
         'A student reacts a measured mass of solid calcium metal with an aqueous solution of aluminum chloride to produce solid aluminum:',
@@ -615,12 +605,13 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q4: {
-      title: '4. Particulate Diagram: Atoms + Molecules → One Solid',
+      title: '1. Particulate Diagram: Atoms + Molecules → One Solid',
       skillFocus: 'Particulate Models · Limiting Reactants · Solid Formation',
       equation: '4 Li(s) + O₂(g) → 2 Li₂O(s)',
       prompt:
         'Single lithium atoms (Li) react with oxygen gas molecules (O₂) to form solid lithium oxide, Li₂O(s). The left container starts with 8 Li atoms and 3 O₂ molecules. Flag the mistakes in the student’s "After Reaction" work, then build the corrected container.',
       solidFormula: 'Li₂O',
+      excessFormula: 'O₂',
       keyDescription: { atomLabel: 'Lithium (Li)', moleculeAtomLabel: 'Oxygen (O)' },
       initialParticles: [
         { kind: 'Li_atom', count: 8 },
@@ -630,25 +621,27 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         { kind: 'Li2O_solid', count: 4 },
         { kind: 'O_atom', count: 2 },
       ],
-      flawedAnswers: {
-        limitingReactant: 'O₂',
-        productCount: '2',
-      },
-      errorZones: [
+      studentAuditCards: [
         {
           id: 'err-limiting',
-          label: 'Student Limiting Reactant: "O₂"',
-          description: '8 Li atoms require only 2 O₂ molecules; 3 O₂ are present, so Li runs out first.',
+          promptLabel: 'Limiting Reactant',
+          studentAnswer: 'O₂',
+          isError: true,
+          feedback: '8 Li atoms require only 2 O₂ molecules; 3 O₂ are present, so Li runs out first.',
         },
         {
-          id: 'err-count',
-          label: 'Student Product Count: "2"',
-          description: 'Copied the equation coefficient 2 instead of counting all 4 Li₂O solid units formed.',
+          id: 'valid-count',
+          promptLabel: 'Product Particles Made',
+          studentAnswer: '4 Li₂O',
+          isError: false,
+          feedback: '8 Li atoms combine with 4 O atoms to form 4 Li₂O solid units.',
         },
         {
           id: 'err-atoms',
-          label: 'Unpaired Single O Atoms in After Box',
-          description: 'Excess oxygen stays paired as 1 diatomic O₂ molecule, not 2 lone O atoms.',
+          promptLabel: 'Excess Particles Remaining',
+          studentAnswer: '2 O atoms',
+          isError: true,
+          feedback: 'Excess oxygen stays paired as 1 diatomic O₂ molecule, not 2 lone O atoms.',
         },
       ],
       availableStamps: [
@@ -660,19 +653,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
       limitingReactantOptions: ['Li', 'O₂'],
       correctLimitingReactant: 'Li',
       correctProductCount: 4,
-      explanationMcq: {
-        id: 'q4b-mcq',
-        question: 'Which statement best explains what the student did incorrectly in Problem 4?',
-        options: [
-          'Li is the limiting reactant (8 Li reacts with 2 O₂ to produce 4 Li₂O solid units), the student copied the coefficient "2" instead of 4 products, and excess O₂ stays bonded as 1 diatomic O₂ molecule rather than 2 single O atoms.',
-          'O₂ is limiting because 3 is smaller than 8, and O₂ splits into single atoms upon heating.',
-          'Only 2 Li₂O solid units can form, leaving 4 Li atoms unreacted.',
-          'All 3 O₂ molecules react completely with 8 Li atoms.',
-        ],
-        correctIndex: 0,
-        feedbackCorrect: 'Correct! 8 Li consumes 2 O₂ to form 4 Li₂O units, leaving 1 intact O₂ molecule.',
-        feedbackIncorrect: 'Count total Li and O atoms: 8 Li needs 4 O atoms (2 O₂ molecules), leaving 1 intact O₂ molecule.',
-      },
+      correctExcessCount: 1,
     },
 
     q5: {
@@ -715,7 +696,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     name: 'Practice Set C',
     subtitle: 'Pentane combustion, Mg/FeCl₃ prediction, Mg/CuCl₂ lab-loss conservation, Mg₃N₂ solid synthesis, SiC furnace',
     q1: {
-      title: '1. Combustion Stoichiometry Error Analysis',
+      title: '2. Stoichiometry',
       skillFocus: 'Equation Balancing · Dimensional Analysis · Molar Mass',
       prompt:
         'Pentane (C₅H₁₂) reacts with oxygen gas in a combustion reaction to produce carbon dioxide and water. How many grams of carbon dioxide (CO₂) are produced from burning 36.08 g of C₅H₁₂ in excess oxygen?',
@@ -793,7 +774,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q2: {
-      title: '2. Mole Ratios & Molar Mass Prediction',
+      title: '4. Mole Ratios & Molar Mass Prediction',
       skillFocus: 'Qualitative Prediction · Mole Ratio · Molar Mass',
       context:
         'A student places solid magnesium ribbon into an aqueous iron(III) chloride solution to produce solid iron in a single-replacement reaction:',
@@ -889,12 +870,13 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
     },
 
     q4: {
-      title: '4. Particulate Diagram: Atoms + Molecules → One Solid',
+      title: '1. Particulate Diagram: Atoms + Molecules → One Solid',
       skillFocus: 'Particulate Models · Limiting Reactants · Solid Formation',
       equation: '3 Mg(s) + N₂(g) → Mg₃N₂(s)',
       prompt:
         'Single magnesium atoms (Mg) react with nitrogen gas molecules (N₂) to form solid magnesium nitride, Mg₃N₂(s). The left container starts with 6 Mg atoms and 3 N₂ molecules. Flag the mistakes in the student’s "After Reaction" work, then build the corrected container.',
       solidFormula: 'Mg₃N₂',
+      excessFormula: 'N₂',
       keyDescription: { atomLabel: 'Magnesium (Mg)', moleculeAtomLabel: 'Nitrogen (N)' },
       initialParticles: [
         { kind: 'Mg_atom', count: 6 },
@@ -904,25 +886,27 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
         { kind: 'Mg3N2_solid', count: 2 },
         { kind: 'N_atom', count: 2 },
       ],
-      flawedAnswers: {
-        limitingReactant: 'N₂',
-        productCount: '1',
-      },
-      errorZones: [
+      studentAuditCards: [
         {
           id: 'err-limiting',
-          label: 'Student Limiting Reactant: "N₂"',
-          description: '6 Mg atoms only need 2 N₂ molecules; 3 N₂ are present, so Mg runs out first.',
+          promptLabel: 'Limiting Reactant',
+          studentAnswer: 'N₂',
+          isError: true,
+          feedback: '6 Mg atoms only need 2 N₂ molecules; 3 N₂ are present, so Mg runs out first.',
         },
         {
-          id: 'err-count',
-          label: 'Student Product Count: "1"',
-          description: 'Copied the implicit coefficient 1 from the equation instead of counting 2 Mg₃N₂ solid units formed.',
+          id: 'valid-count',
+          promptLabel: 'Product Particles Made',
+          studentAnswer: '2 Mg₃N₂',
+          isError: false,
+          feedback: '6 Mg atoms react with 4 N atoms to produce 2 Mg₃N₂ solid units.',
         },
         {
           id: 'err-atoms',
-          label: 'Unpaired Single N Atoms in After Box',
-          description: 'Excess nitrogen remains bonded as 1 diatomic N₂ molecule, not 2 lone N atoms.',
+          promptLabel: 'Excess Particles Remaining',
+          studentAnswer: '2 N atoms',
+          isError: true,
+          feedback: 'Excess nitrogen remains bonded as 1 diatomic N₂ molecule, not 2 lone N atoms.',
         },
       ],
       availableStamps: [
@@ -934,19 +918,7 @@ export const PRACTICE_SETS: Record<SetId, PracticeSet> = {
       limitingReactantOptions: ['Mg', 'N₂'],
       correctLimitingReactant: 'Mg',
       correctProductCount: 2,
-      explanationMcq: {
-        id: 'q4c-mcq',
-        question: 'Which statement best explains what the student did incorrectly in Problem 4?',
-        options: [
-          'Mg is the limiting reactant (6 Mg reacts with 2 N₂ to form 2 Mg₃N₂ solid units), the student copied the implicit coefficient "1" instead of 2 products, and excess N₂ stays bonded as 1 diatomic N₂ molecule rather than 2 single N atoms.',
-          'N₂ is limiting because 3 N₂ is fewer particles than 6 Mg.',
-          'Only 1 Mg₃N₂ unit can form, leaving 3 Mg atoms behind.',
-          'All 3 N₂ molecules reacted completely, leaving no excess.',
-        ],
-        correctIndex: 0,
-        feedbackCorrect: 'Correct! 6 Mg consumes 2 N₂ to form 2 Mg₃N₂ units, leaving 1 intact N₂ molecule.',
-        feedbackIncorrect: 'Count Mg and N atoms: 6 Mg reacts with 4 N atoms (2 N₂), leaving 1 intact N₂ molecule.',
-      },
+      correctExcessCount: 1,
     },
 
     q5: {

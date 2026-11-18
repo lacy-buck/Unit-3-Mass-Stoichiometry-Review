@@ -89,7 +89,9 @@ export function evaluateSetPerformance(
 
   // Section 4 (5 checks)
   const q4 = progress.q4;
-  const q4ErrorsOk = practiceSet.q4.errorZones.every((z) => q4.flaggedZoneIds.includes(z.id))
+  const q4ErrorsOk = practiceSet.q4.studentAuditCards.every((c) =>
+    c.isError ? q4.flaggedZoneIds.includes(c.id) : !q4.flaggedZoneIds.includes(c.id)
+  )
     ? 1
     : 0;
   const q4DiagramOk =
@@ -101,8 +103,9 @@ export function evaluateSetPerformance(
   const q4LimitingOk = q4.limitingReactant === practiceSet.q4.correctLimitingReactant ? 1 : 0;
   const q4CountOk =
     parseInt(q4.productCount || '0', 10) === practiceSet.q4.correctProductCount ? 1 : 0;
-  const q4McqOk = q4.explanationChoice === practiceSet.q4.explanationMcq.correctIndex ? 1 : 0;
-  const q4Correct = q4ErrorsOk + q4DiagramOk + q4LimitingOk + q4CountOk + q4McqOk;
+  const q4ExcessOk =
+    parseInt(q4.excessCount || '-1', 10) === practiceSet.q4.correctExcessCount ? 1 : 0;
+  const q4Correct = q4ErrorsOk + q4DiagramOk + q4LimitingOk + q4CountOk + q4ExcessOk;
   const q4Total = 5;
 
   // Section 5 (6 checks)
@@ -134,24 +137,24 @@ export function evaluateSetPerformance(
 
   const sections: SectionPerformance[] = [
     {
+      key: 'q4',
+      label: '1. Particulate',
+      submitted: q4.submitted,
+      attempts: engagement.attempts.q4,
+      timeSpentSec: engagement.timeSpentSec.q4,
+      correctCount: q4Correct,
+      totalCount: q4Total,
+      percent: q4.submitted ? Math.round((q4Correct / q4Total) * 100) : null,
+    },
+    {
       key: 'q1',
-      label: '1. Error Analysis',
+      label: '2. Stoichiometry',
       submitted: q1.submitted,
       attempts: engagement.attempts.q1,
       timeSpentSec: engagement.timeSpentSec.q1,
       correctCount: q1Correct,
       totalCount: q1Total,
       percent: q1.submitted ? Math.round((q1Correct / q1Total) * 100) : null,
-    },
-    {
-      key: 'q2',
-      label: '2. Mole Ratios',
-      submitted: q2.submitted,
-      attempts: engagement.attempts.q2,
-      timeSpentSec: engagement.timeSpentSec.q2,
-      correctCount: q2Correct,
-      totalCount: q2Total,
-      percent: q2.submitted ? Math.round((q2Correct / q2Total) * 100) : null,
     },
     {
       key: 'q3',
@@ -164,14 +167,14 @@ export function evaluateSetPerformance(
       percent: q3.submitted ? Math.round((q3Correct / q3Total) * 100) : null,
     },
     {
-      key: 'q4',
-      label: '4. Particulate',
-      submitted: q4.submitted,
-      attempts: engagement.attempts.q4,
-      timeSpentSec: engagement.timeSpentSec.q4,
-      correctCount: q4Correct,
-      totalCount: q4Total,
-      percent: q4.submitted ? Math.round((q4Correct / q4Total) * 100) : null,
+      key: 'q2',
+      label: '4. Mole Ratios',
+      submitted: q2.submitted,
+      attempts: engagement.attempts.q2,
+      timeSpentSec: engagement.timeSpentSec.q2,
+      correctCount: q2Correct,
+      totalCount: q2Total,
+      percent: q2.submitted ? Math.round((q2Correct / q2Total) * 100) : null,
     },
     {
       key: 'q5',

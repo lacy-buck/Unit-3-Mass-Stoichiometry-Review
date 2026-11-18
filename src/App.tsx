@@ -27,13 +27,13 @@ const STORAGE_KEY = 'unit3-stoichiometry-review-v3';
 const REFLECTION_STORAGE_KEY = 'unit3-stoichiometry-reflection-v2';
 const ENGAGEMENT_STORAGE_KEY = 'unit3-stoichiometry-engagement-v1';
 
-const QUESTION_KEYS: SectionKey[] = ['q1', 'q2', 'q3', 'q4', 'q5'];
+const QUESTION_KEYS: SectionKey[] = ['q4', 'q1', 'q3', 'q2', 'q5'];
 
 const STEP_LABELS = [
-  '1. Error Analysis',
-  '2. Mole Ratios',
+  '1. Particulate',
+  '2. Stoichiometry',
   '3. Conservation',
-  '4. Particulate',
+  '4. Mole Ratios',
   '5. Limiting Reactant',
   '6. Reflection',
 ];
@@ -344,10 +344,10 @@ export default function App() {
             const isDone = isReflectionStep
               ? reflection.submitted
               : [
-                  currentProgress.q1.submitted,
-                  currentProgress.q2.submitted,
-                  currentProgress.q3.submitted,
                   currentProgress.q4.submitted,
+                  currentProgress.q1.submitted,
+                  currentProgress.q3.submitted,
+                  currentProgress.q2.submitted,
                   currentProgress.q5.submitted,
                 ][idx];
             return (
@@ -373,6 +373,16 @@ export default function App() {
         {section === 'exam' && (
           <div className="space-y-6">
             {questionIndex === 0 && (
+              <Question4View
+                data={currentSet.q4}
+                state={currentProgress.q4}
+                onChange={(next) =>
+                  updateCurrentProgress((prev) => ({ ...prev, q4: next }))
+                }
+                onSubmitAttempt={() => recordSectionAttempt('q4')}
+              />
+            )}
+            {questionIndex === 1 && (
               <Question1View
                 data={currentSet.q1}
                 state={currentProgress.q1}
@@ -380,16 +390,6 @@ export default function App() {
                   updateCurrentProgress((prev) => ({ ...prev, q1: next }))
                 }
                 onSubmitAttempt={() => recordSectionAttempt('q1')}
-              />
-            )}
-            {questionIndex === 1 && (
-              <Question2View
-                data={currentSet.q2}
-                state={currentProgress.q2}
-                onChange={(next) =>
-                  updateCurrentProgress((prev) => ({ ...prev, q2: next }))
-                }
-                onSubmitAttempt={() => recordSectionAttempt('q2')}
               />
             )}
             {questionIndex === 2 && (
@@ -403,13 +403,13 @@ export default function App() {
               />
             )}
             {questionIndex === 3 && (
-              <Question4View
-                data={currentSet.q4}
-                state={currentProgress.q4}
+              <Question2View
+                data={currentSet.q2}
+                state={currentProgress.q2}
                 onChange={(next) =>
-                  updateCurrentProgress((prev) => ({ ...prev, q4: next }))
+                  updateCurrentProgress((prev) => ({ ...prev, q2: next }))
                 }
-                onSubmitAttempt={() => recordSectionAttempt('q4')}
+                onSubmitAttempt={() => recordSectionAttempt('q2')}
               />
             )}
             {questionIndex === 4 && (
