@@ -1,0 +1,6 @@
+{
+  "name": "Unit 3 Stoichiometry Review",
+  "description": "Interactive chemistry review studio covering balancing equations, dimensional analysis, mole ratios, conservation of mass, particulate diagrams, and limiting reactants.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
