@@ -127,9 +127,13 @@ export const Question1View: React.FC<{
     onChange({ ...state, flaggedIds: nextFlags });
   };
 
-  const allCoreErrorsSpotted =
-    state.flaggedIds.includes(data.flawedEquation.id) &&
-    data.flawedTrack.filter((t) => t.isError).every((t) => state.flaggedIds.includes(t.id));
+  const auditItems = [data.flawedEquation, ...data.flawedTrack];
+  const coreErrorsCount = auditItems.filter((item) => item.isError).length;
+  const allCoreErrorsSpotted = auditItems.every((item) =>
+    item.isError
+      ? state.flaggedIds.includes(item.id)
+      : !state.flaggedIds.includes(item.id)
+  );
 
   const coeffsCorrect = data.equationParts.correctCoeffs.every(
     (c, idx) => parseInt(state.coeffs[idx] || '0', 10) === c
@@ -166,9 +170,9 @@ export const Question1View: React.FC<{
         <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sm text-sky-950 space-y-1">
           <p className="font-medium">How to audit a dimensional analysis table:</p>
           <p className="text-xs leading-relaxed text-sky-900">
-            1) Count C, H, and O atoms on both sides of the chemical equation first. 2) Trace units
-            diagonally across the railroad track: the denominator of each step must cancel the
-            numerator of the previous step. 3) Remember molar mass is always grams per{' '}
+            1) Count atoms of every element on both sides of the chemical equation first. 2) Trace
+            units diagonally across the railroad track: the denominator of each step must cancel
+            the numerator of the previous step. 3) Remember molar mass is always grams per{' '}
             <strong>1 mole</strong>, never multiplied by the equation coefficient.
           </p>
         </div>
@@ -184,7 +188,9 @@ export const Question1View: React.FC<{
         <div className="border border-slate-300 rounded-xl p-4 bg-slate-50 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-semibold text-slate-700">
-              Step A: Click every mistake in the student’s work below to circle it
+              Step A: Click the {coreErrorsCount}{' '}
+              {coreErrorsCount === 1 ? 'mistake' : 'mistakes'} in the student’s equation or
+              dimensional analysis work below
             </span>
             <span className="text-xs text-slate-500 tabular-nums">
               {state.flaggedIds.length} selected
@@ -230,17 +236,9 @@ export const Question1View: React.FC<{
                 );
               })}
 
-              <button
-                type="button"
-                onClick={() => toggleFlag(data.flawedResult.id)}
-                className={`ml-2 px-3 py-2 rounded-lg chem-eq text-sm font-semibold whitespace-nowrap cursor-pointer transition-all ${
-                  state.flaggedIds.includes(data.flawedResult.id)
-                    ? 'ring-2 ring-rose-600 bg-rose-50 text-rose-900'
-                    : 'hover:bg-white text-slate-900'
-                }`}
-              >
+              <span className="ml-2 px-3 py-2 chem-eq text-sm font-semibold whitespace-nowrap text-slate-900">
                 {data.flawedResult.display}
-              </button>
+              </span>
             </div>
           </div>
 
@@ -248,11 +246,11 @@ export const Question1View: React.FC<{
             <div className="pt-3 border-t border-slate-200 space-y-2">
               <StatusFeedback
                 ok={allCoreErrorsSpotted}
-                okText="You spotted all core equation & dimensional analysis errors!"
-                errText="Look closer at both the balanced equation and the conversion factors."
+                okText={`You spotted ${coreErrorsCount === 1 ? 'the mistake' : `all ${coreErrorsCount} mistakes`} without flagging valid steps!`}
+                errText={`Flag only the ${coreErrorsCount} ${coreErrorsCount === 1 ? 'mistake' : 'mistakes'} in the equation and conversion track above.`}
               />
               <div className="grid gap-1.5 text-xs">
-                {[data.flawedEquation, ...data.flawedTrack, data.flawedResult].map((item) => {
+                {auditItems.map((item) => {
                   const userFlagged = state.flaggedIds.includes(item.id);
                   if (!userFlagged && !item.isError) return null;
                   return (
@@ -273,7 +271,7 @@ export const Question1View: React.FC<{
                             : 'Missed Error: '
                           : 'Actually Valid: '}
                       </span>
-                      {item.isError ? item.errorFeedback : 'This step was set up properly.'}
+                      {item.errorFeedback || 'This step was set up properly.'}
                     </div>
                   );
                 })}
@@ -358,7 +356,7 @@ export const Question1View: React.FC<{
             <StatusFeedback
               ok={coeffsCorrect}
               okText="Equation coefficients are balanced."
-              errText="Recount C, H, and O atoms on both sides of your equation."
+              errText="Recount the atoms of every element on both sides of your equation."
             />
           )}
         </div>

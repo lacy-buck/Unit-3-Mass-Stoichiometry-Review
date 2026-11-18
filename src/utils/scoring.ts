@@ -45,12 +45,14 @@ export function evaluateSetPerformance(
   progress: SetUserProgress,
   engagement: EngagementLog
 ): OverallPerformance {
-  // Section 1 (6 checks)
+  // Section 2: Stoichiometry (4 checks)
   const q1 = progress.q1;
-  const q1FlagEq = q1.flaggedIds.includes(practiceSet.q1.flawedEquation.id) ? 1 : 0;
-  const q1FlagTrackErrors = practiceSet.q1.flawedTrack
-    .filter((t) => t.isError)
-    .reduce((acc, t) => acc + (q1.flaggedIds.includes(t.id) ? 1 : 0), 0);
+  const q1AuditItems = [practiceSet.q1.flawedEquation, ...practiceSet.q1.flawedTrack];
+  const q1ErrorsOk = q1AuditItems.every((item) =>
+    item.isError ? q1.flaggedIds.includes(item.id) : !q1.flaggedIds.includes(item.id)
+  )
+    ? 1
+    : 0;
   const q1CoeffsOk = practiceSet.q1.equationParts.correctCoeffs.every(
     (c, idx) => parseInt(q1.coeffs[idx] || '0', 10) === c
   )
@@ -68,8 +70,8 @@ export function evaluateSetPerformance(
   const q1MassOk = approxEqual(q1.finalMass, practiceSet.q1.correctMass, practiceSet.q1.tolerance)
     ? 1
     : 0;
-  const q1Correct = q1FlagEq + q1FlagTrackErrors + q1CoeffsOk + q1TrackOk + q1MassOk;
-  const q1Total = 1 + practiceSet.q1.flawedTrack.filter((t) => t.isError).length + 3;
+  const q1Correct = q1ErrorsOk + q1CoeffsOk + q1TrackOk + q1MassOk;
+  const q1Total = 4;
 
   // Section 2 (4 checks)
   const q2 = progress.q2;
